@@ -1,0 +1,82 @@
+<!--
+# ==========================================================
+# CITADEL CORE - Sistema de Integridad y Gestión
+# Archivo: mantenimiento.html
+# Versión: 0.2.5 (Referencia unificada)
+# Módulo: visual
+# Certificación: FHS-Compliant | Norma: ISO/IEC 27001 (Simulada)
+# Autor: Daniel Miñana & Gemini
+# ---------------------------------------------------------
+# Descripción: Página de estado de despliegue para CITADEL CORE.
+# Proporciona información sobre el estado actual del sistema,
+# incluyendo contadores regresivos para fases clave del despliegue.
+# ==========================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CITADEL | Deployment Status</title>
+    <style>
+        body { background-color: #0d1117; color: #58a6ff; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .bunker-box { border: 1px solid #30363d; padding: 2rem; background: #161b22; box-shadow: 0 0 20px rgba(88, 166, 255, 0.1); max-width: 600px; width: 90%; }
+        h1 { color: #f0f6fc; border-bottom: 1px solid #30363d; padding-bottom: 10px; font-size: 1.5rem; }
+        .status-line { margin: 10px 0; font-size: 0.9rem; }
+        .status-line::before { content: "> "; color: #3fb950; }
+        .counter-container { margin-top: 20px; border-top: 1px dashed #30363d; padding-top: 15px; }
+        .timer { color: #ffa657; font-weight: bold; font-size: 1.1rem; }
+        .label { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; }
+        .footer { margin-top: 20px; font-size: 0.7rem; color: #484f58; }
+    </style>
+</head>
+<body>
+
+<div class="bunker-box">
+    <h1>CITADEL_CORE :: Status Page</h1>
+    <div class="status-line">Kernel State: v0.2.5_DEPLOIMENT</div>
+    <div class="status-line">Security Layer: Guard Service Active</div>
+    <div class="status-line">Name: Daniel Miñana</div>
+    
+    <div class="counter-container">
+        <div class="label">T-Minus: Beta Testing (v0.2.5)</div>
+        <div id="timer1" class="timer">Calculando...</div>
+    </div>
+
+    <div class="counter-container">
+        <div class="label">T-Minus: Full Production Index</div>
+        <div id="timer2" class="timer">Calculando...</div>
+    </div>
+
+    <div class="footer">
+        FHS-Compliant Infrastructure | Protected by CITADEL Guard
+    </div>
+</div>
+
+<script>
+    function updateTimers() {
+        const dates = {
+            test: new Date("January 15, 2026 00:00:00").getTime(),
+            prod: new Date("February 01, 2026 00:00:00").getTime()
+        };
+
+        setInterval(() => {
+            const now = new Date().getTime();
+            
+            for (let key in dates) {
+                const diff = dates[key] - now;
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const timerStr = `${d}d ${h}h ${m}m ${s}s`;
+                document.getElementById(key === 'test' ? 'timer1' : 'timer2').innerHTML = diff > 0 ? timerStr : "ONLINE";
+            }
+        }, 1000);
+    }
+    updateTimers();
+</script>
+
+</body>
+</html>

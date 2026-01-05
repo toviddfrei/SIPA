@@ -1,0 +1,246 @@
+/*
+# ==========================================================
+# CITADEL CORE - Sistema de Integridad y Gestión
+# Archivo: styles.css
+# Versión: 0.2.5 (Referencia unificada)
+# Módulo: Visual
+# Certificación: FHS-Compliant | Norma: ISO/IEC 27001 (Simulada)
+# Autor: Daniel Miñana & Gemini
+# ---------------------------------------------------------
+# Descripción: Hoja de estilos CSS del proyecto BApp+Citadel+CiberAudit
+# ==========================================================
+*/
+
+/* =============================================================
+   1. VARIABLES Y TEMAS (v0.2.5)
+   ============================================================= */
+:root {
+    --bg-main: #f8fafc;
+    --card-bg: #ffffff;
+    --text-title: #1e293b;
+    --text-body: #475569;
+    --accent-blue: #e0f2fe;
+    --accent-blue-dark: #38bdf8;
+    --accent-green: #dcfce7;
+    --accent-yellow: #fef9c3;
+    --border-color: #e2e8f0;
+    --banner-bg: #243b53;
+}
+
+[data-theme="night"] {
+    --bg-main: #0f172a;
+    --card-bg: #1e293b;
+    --text-title: #f1f5f9;
+    --text-body: #94a3b8;
+    --accent-blue: #1e3a8a;
+    --accent-blue-dark: #38bdf8;
+    --accent-green: #064e3b;
+    --accent-yellow: #422006;
+    --border-color: #334155;
+    --banner-bg: #000000;
+}
+
+/* =============================================================
+   2. RESET Y ESTRUCTURA BASE
+   ============================================================= */
+* { box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-body);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.container {
+    max-width: 1000px; /* Un poco más ancho para las tablas */
+    margin: 80px auto 0;
+}
+
+/* =============================================================
+   3. COMPONENTES (Tarjetas y Elementos)
+   ============================================================= */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 { color: var(--text-title); margin-top: 0; }
+
+.decision-box {
+    background-color: var(--accent-green);
+    border-left: 4px solid var(--accent-blue-dark);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 0.85rem;
+}
+
+/* =============================================================
+   4. SISTEMA DE BANNER Y NAVEGACIÓN (Actualizado)
+   ============================================================= */
+.banner {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    background-color: var(--banner-bg);
+    color: white;
+    padding: 10px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1001;
+    font-size: 0.8rem;
+}
+
+.main-nav {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 38px; /* Ajustado al banner */
+    width: 100%;
+    z-index: 1000;
+    left: 0;
+}
+
+.nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+}
+
+.nav-links { list-style: none; display: flex; gap: 20px; margin: 0; align-items: center;}
+.nav-links a { text-decoration: none; color: var(--text-body); font-weight: 600; font-size: 0.9rem; }
+.admin-link { color: var(--accent-blue-dark) !important; }
+
+/* Menú Desplegable (Dropdown) */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--card-bg);
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 1;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 5px;
+}
+.dropdown-content a {
+    padding: 12px 16px;
+    display: block;
+    border-bottom: 1px solid var(--border-color);
+}
+.dropdown-content a:last-child { border: none; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* =============================================================
+   5. ELEMENTOS DE TABLAS Y TERMINAL
+   ============================================================= */
+.root-table td { font-size: 0.85rem; border-bottom: 1px solid var(--border-color); }
+.badge-success { background: var(--accent-green); color: #155724; font-weight: bold; }
+.btn-mini { padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; background: white; }
+
+.integrity-terminal {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+}
+
+.hash-text { color: #64748b; font-size: 0.75rem; }
+
+.led {
+    height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;
+}
+.led-on { background-color: #4ade80; box-shadow: 0 0 5px #4ade80; }
+.led-off { background-color: #f87171; }
+
+.btn-pastel {
+    border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;
+}
+.btn-pastel.green { background-color: var(--accent-green); }
+.btn-pastel.blue { background-color: var(--accent-blue); }
+
+.input-pastel {
+    border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; background: var(--bg-main); color: var(--text-title);
+}
+
+/* =============================================================
+   6. MOTOR DE NOTICIAS (v0.2.5)
+   ============================================================= */
+.news-entry {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.news-entry:hover {
+    transform: translateX(5px);
+    background: var(--bg-main) !important;
+    box-shadow: -5px 0 0 var(--accent-blue-dark);
+}
+
+.news-tag {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+/* Scrollbar personalizado para el dashboard */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--accent-blue-dark); border-radius: 10px; }
+
+/* =============================================================
+   7. COMPONENTES DE MÉTRICAS Y CI/CD (Servicio #04+)
+   ============================================================= */
+
+/* Animación de pulso para servicios activos */
+.status-pulse {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* Tabla de métricas reducida */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.metric-card {
+    background: rgba(0,0,0,0.05);
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.7rem;
+}
+
+.metric-value {
+    display: block;
+    font-weight: bold;
+    color: var(--accent-blue-dark);
+}

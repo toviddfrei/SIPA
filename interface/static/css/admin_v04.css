@@ -1,0 +1,210 @@
+/*
+# ==========================================================
+# CITADEL CORE - Sistema de Integridad y Gestión
+# Archivo: admin_v04.css
+# Versión: 0.2.5 (Referencia unificada)
+# Módulo: Visual
+# Certificación: FHS-Compliant | Norma: ISO/IEC 27001 (Simulada)
+# Autor: Daniel Miñana & Gemini
+# ---------------------------------------------------------
+# Descripción: Hoja de estilos CSS del panel root
+# ==========================================================
+*/
+
+:root {
+    /* 1. PALETA BASE (SISTEMA DE DISEÑO) 
+       Usamos variables para garantizar que cambiar un color aquí 
+       se refleje en toda la arquitectura del sitio. */
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-dim: #64748b;
+    
+    /* 2. ACENTOS OPERATIVOS (SEMÁNTICA DE COLORES)
+       Cada color representa un estado: Verde (OK), Azul (Procesando), 
+       Morado (IA/Evolución), Ámbar (Espera/Alerta). */
+    --mint-d: #166534;    --mint-l: #dcfce7;
+    --blue-d: #075985;    --blue-l: #e0f2fe;
+    --lavender-d: #5b21b6; --lavender-l: #f3f0ff;
+    --amber-d: #92400e;   --amber-l: #fef3c7;
+}
+
+/* --- RESET Y ESTRUCTURA FUNDAMENTAL --- */
+body { 
+    background-color: var(--bg); 
+    color: var(--text-main); 
+    font-family: 'Inter', -apple-system, sans-serif; 
+    margin: 0; 
+    padding: 30px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased; /* Mejora la legibilidad en Mac/iOS */
+}
+
+.mono { 
+    font-family: 'Cascadia Code', 'Fira Code', monospace; 
+    font-size: 0.85em;
+    letter-spacing: -0.02em;
+}
+
+/* --- CABECERA DE PANEL (DASHBOARD-HEADER) --- */
+.dashboard-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.brand-group h1 { font-size: 1.4rem; margin: 0; }
+.badge-version { font-weight: 300; opacity: 0.7; font-size: 0.9rem; }
+
+/* Botones Mini (Navegación Interna) */
+.btn-mini {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid transparent;
+    transition: 0.2s ease;
+}
+.btn-blue { color: var(--blue-d); border-color: var(--blue-d); }
+.btn-amber { color: var(--amber-d); border-color: var(--amber-d); }
+.btn-mini:hover { background: rgba(0,0,0,0.05); transform: translateY(-1px); }
+
+/* --- GRID DE TELEMETRÍA (SENSORES) --- */
+.telemetry-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 15px; 
+    margin-bottom: 25px; 
+}
+
+/* Tarjeta Base del Sensor */
+.sensor {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Modificadores de Borde (Jerarquía Visual) */
+.border-mint { border-left: 4px solid var(--mint-d); }
+.border-blue { border-left: 4px solid var(--blue-d); }
+.border-lavender { border-left: 4px solid var(--lavender-d); }
+.border-amber { border-left: 4px solid var(--amber-d); }
+
+.stat { font-size: 1.1rem; font-weight: 800; margin: 5px 0; }
+.label { font-size: 0.6rem; color: var(--text-dim); display: block; text-transform: uppercase; }
+.sub-label { font-size: 0.55rem; color: var(--text-dim); }
+
+/* --- COMPONENTES DINÁMICOS (BARRAS Y LEDS) --- */
+.progress-container {
+    width: 100%;
+    background: var(--bg);
+    height: 4px;
+    border-radius: 2px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--blue-d);
+    width: 0%; /* Controlado por JS para evitar errores de CSS */
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.led-cluster { display: flex; gap: 5px; margin-top: 8px; }
+.led { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+.led-active { 
+    background: #2ecc71; 
+    box-shadow: 0 0 8px #2ecc71; 
+    animation: pulse-led 2s infinite; 
+}
+
+@keyframes pulse-led {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* --- LAYOUT OPERATIVO Y TABLAS --- */
+.main-layout { 
+    display: grid; 
+    grid-template-columns: 1fr 1.2fr; 
+    gap: 20px; 
+}
+
+.card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.data-table th {
+    text-align: left;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--bg);
+    padding: 8px 0;
+}
+
+.data-table td { padding: 10px 0; border-bottom: 1px dotted var(--bg); }
+
+/* --- FORMULARIO INYECTOR (IA-CORE) --- */
+.inyect-core { background: var(--lavender-l); border-color: var(--lavender-d); }
+
+.form-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    margin-bottom: 10px; 
+}
+
+.inyect-form input, .inyect-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-sizing: border-box; /* Crucial: asegura que el padding no rompa el ancho */
+}
+
+.stress-control { margin: 10px 0; }
+.radio-group { display: flex; gap: 15px; font-size: 0.75rem; margin-top: 5px; }
+
+.btn-push-core {
+    width: 100%;
+    padding: 12px;
+    background: var(--lavender-d);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-push-core:hover { opacity: 0.9; }
+
+/* --- UTILIDADES --- */
+.text-mint { color: #10b981; }
+.badge { padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+.bg-mint { background: var(--mint-l); color: var(--mint-d); }
+.bg-amber { background: var(--amber-l); color: var(--amber-d); }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- FOOTER --- */
+.dashboard-footer {
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    opacity: 0.6;
+}
