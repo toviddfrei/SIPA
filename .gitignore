@@ -1,5 +1,6 @@
 venv
-docs
 constructor
 data
 logs
+docs
+__pycache__/*

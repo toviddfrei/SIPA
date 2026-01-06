@@ -1,12 +1,3 @@
-"""
-CITADEL CORE - Integrity Test
-Archivo: test_db_full.py
-Versión: 0.2.5
-Autor: Daniel Miñana
----------------------------------------------------------
-Descripción: Test de estrés y verificación de tablas para la DB migrada.
-"""
-
 # ==========================================================
 # CITADEL CORE - Integrity Test
 # Archivo: test_db_full.py
@@ -36,7 +27,7 @@ def run_full_audit():
     print("[✅] Conexión establecida con éxito.")
 
     # 2. Verificación de Tablas (Herencia BApp)
-    tables_to_check = ['app_logs', 'sessions']
+    tables_to_check = ['app_logs', 'sessions', 'metricas_arranque', 'roadmap']
     for table in tables_to_check:
         db._cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';")
         if db._cursor.fetchone():
