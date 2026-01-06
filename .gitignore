@@ -1,6 +1,55 @@
-venv
-constructor
+# ==========================================================
+# PROYECTO SIPA - .gitignore Profesional
+# Protección de Datos, Entornos y Artefactos
+# ==========================================================
+
+# --- ENTORNOS VIRTUALES Y PYTHON ---
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.pytest_cache/
+
+# --- BASE DE DATOS (SIPA_KERNEL) ---
+# Ignoramos la base de datos real para proteger la integridad del perfil
+# data por completo de momento AUTOR
 data
-logs
+data/*.db
+data/*.db-journal
+data/*.db-wal
+
+# --- BASE DE DATOS (SIPA_KERNEL) ---
+# Ignoramos la base de datos real para proteger la integridad del perfil
+# docs por completo de momento AUTOR
 docs
-__pycache__/*
+
+# --- ARTEFACTOS Y CONOCIMIENTO ---
+# No subimos los .md generados por SIPAdoc (contienen info privada/profesional)
+data/knowledge/*.md
+
+# --- EVIDENCIAS Y DOCUMENTACIÓN PRIVADA ---
+# Ignoramos las carpetas de evidencias (títulos, contratos, JPGs)
+data/evidences/laboral/
+data/evidences/formativa/
+# Excepto si quieres mantener la estructura (usando un archivo .gitkeep dentro)
+!data/evidences/laboral/.gitkeep
+!data/evidences/formativa/.gitkeep
+
+# --- LOGS Y TELEMETRÍA ---
+# Los logs locales no deben ensuciar el repositorio
+*.log
+logs/
+
+# --- CONFIGURACIÓN E IDEs ---
+.vscode/
+.idea/
+*.swp
+*.bak
+.DS_Store
+
+# --- TEMP ---
+tmp/
+temp/

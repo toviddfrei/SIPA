@@ -123,14 +123,14 @@ class PersistenceManager:
             )
         """)
 
-        # 6. NUEVO: Módulo de Hitos Estratégicos (Cuentas Atrás / T-Minus)
+        # 6. Módulo de Hitos Estratégicos (Cuentas Atrás / T-Minus)
         self._cursor.execute("""
             CREATE TABLE IF NOT EXISTS sipa_hitos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 titulo TEXT NOT NULL,
                 descripcion TEXT,
-                fecha_meta TEXT NOT NULL,  -- Almacenado como 'YYYY-MM-DD HH:MM:SS'
-                estado TEXT DEFAULT 'ACTIVO', -- ACTIVO, COMPLETADO, ARCHIVADO
+                fecha_meta TEXT NOT NULL,
+                estado TEXT DEFAULT 'ACTIVO',
                 prioridad INTEGER DEFAULT 1
             )
         """)
@@ -171,12 +171,12 @@ class PersistenceManager:
             ts_creacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = """INSERT INTO roadmap 
                      (timestamp, fecha_objetivo, rango_superior, etiqueta_sub, tarea, nota_extendida, estado, vinculo_archivo) 
-                     VALUES (?, ?, ?, ?, ?, ?, 'PENDIENTE', ?)"""
+                     VALUES (?, ?, ?, ?, ?, ?, 'COMPLETADO', ?)"""
             self._cursor.execute(sql, (ts_creacion, fecha_obj, n1, n2, tarea, nota, archivo))
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"[-] Error al insertar hito: {e}")
+            print(f"[-] Error al insertar hito en roadmap: {e}")
             return False
 
     def obtener_roadmap_filtrado(self, n1="ALL", n2="ALL"):
@@ -190,7 +190,7 @@ class PersistenceManager:
             if n2 != "ALL":
                 query += " AND etiqueta_sub = ?"
                 params.append(n2)
-            query += " ORDER BY fecha_objetivo ASC"
+            query += " ORDER BY fecha_objetivo DESC"
             self._cursor.execute(query, params)
             return self._cursor.fetchall()
         except Exception:
@@ -248,7 +248,6 @@ class PersistenceManager:
             return "ERROR", 0
 
     def obtener_metricas_recientes(self, limite=10):
-        """Recupera los datos para la interfaz de usuario."""
         try:
             if not self.is_connected(): self.connect()
             self._cursor.execute("SELECT timestamp, duracion, estado FROM metricas_arranque ORDER BY id DESC LIMIT ?", (limite,))
@@ -257,7 +256,7 @@ class PersistenceManager:
             return []
 
     # ----------------------------------------------------------------------
-    # GESTIÓN DE LOGS Y SESIONES
+    # GESTIÓN DE LOGS Y SESIONES (Ignición SIPA)
     # ----------------------------------------------------------------------
 
     def insert_log(self, record_dict):
@@ -284,6 +283,10 @@ class PersistenceManager:
             self._conn.commit()
             return self._cursor.lastrowid
         except Exception: return 0
+
+    # ----------------------------------------------------------------------
+    # ESTADO DE CONEXIÓN
+    # ----------------------------------------------------------------------
 
     def is_connected(self):
         try: return self._conn is not None and self._conn.execute("SELECT 1")
