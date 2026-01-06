@@ -1,13 +1,14 @@
 # ==========================================================
-# PROYECTO SIPA - Sistema de Inteligencia de Perfil Automático
+# PROYECTO SIPA - Sistema de Inteligencia de Perfil Automatizado
 # Archivo: environment_manager.py
 # Módulo: SIPAbap (Auditoría de Infraestructura)
-# Versión: 0.2.5 | Fecha: 05/01/2026
-# Autor: Daniel Miñana
+# Versión: 0.2.5 | Fecha: 06/01/2026
+# Autor: Daniel Miñana & Gemini
 # ----------------------------------------------------------
-# DESCRIPCIÓN: Motor de validación por MANIFIESTO. 
-# Certifica la integridad de directorios y archivos vitales
-# garantizando que cada componente del Kernel esté en su sitio.
+# DESCRIPCIÓN: Motor de validación y AUTORREPARACIÓN. 
+# Certifica la integridad de directorios y archivos vitales.
+# Si faltan elementos de datos o testigos, los genera para
+# garantizar la continuidad del arranque (Ignición).
 # ==========================================================
 
 import os
@@ -26,7 +27,7 @@ class InfrastructureError(Exception):
 class EnvironmentManager:
     """
     Guardián de infraestructura de SIPA. Implementa auditoría 
-    detallada de rutas y archivos según el manifiesto operativo.
+    detallada y recuperación automática de rutas.
     """
     def __init__(self):
         self.logger = logging.getLogger(NAME_LOGGER_ESTRUCTURA)
@@ -42,36 +43,46 @@ class EnvironmentManager:
     def check_all(self):
         """
         Ejecuta la auditoría integral (Directorios + Ficheros Vitales).
+        Implementa lógica de creación automática para elementos de datos.
         """
         try:
             self.logger.info("SIPAbap: Iniciando auditoría detallada por manifiesto...")
             
-            # 1. VALIDACIÓN DE DIRECTORIOS (Estructura FHS)
-            # Combinamos críticos y estructurales para una pasada limpia
+            # 1. VALIDACIÓN Y REPARACIÓN DE DIRECTORIOS
             all_dirs = list(set(CRITICAL_DIRS + STRUCTURE_DIRS))
             for directory in all_dirs:
                 if not os.path.exists(directory):
-                    # Si es crítico de datos, lo creamos; si es de código, fallamos
-                    if directory in CRITICAL_DIRS:
-                        os.makedirs(directory, exist_ok=True)
-                        self.logger.info(f"Directorio persistente creado: {directory}")
-                    else:
-                        raise InfrastructureError(f"Directorio de estructura faltante: {directory}")
+                    # Excelencia: SIPA repara su propia estructura de datos
+                    self.logger.warning(f"Infraestructura ausente: {directory}. Iniciando reparación...")
+                    os.makedirs(directory, exist_ok=True)
+                    self.logger.info(f"Directorio restaurado con éxito: {directory}")
                 
                 self._check_write_permission(directory)
 
-            # 2. VALIDACIÓN DE FICHEROS VITALES (Manifiesto de Archivos)
-            # Aquí es donde verás los nuevos logs de archivos específicos
+            # 2. VALIDACIÓN Y GENERACIÓN DE FICHEROS VITALES
             for file_path in CRITICAL_FILES:
+                f_str = str(file_path)
+                
                 if os.path.isfile(file_path):
-                    self.logger.debug(f"Fichero vital certificado: {file_path}")
+                    self.logger.debug(f"Fichero vital certificado: {f_str}")
                 else:
-                    # Excepción para la DB en el primer arranque absoluto
-                    if "sistema.db" in file_path:
-                        self.logger.warning(f"Certificación pendiente (DB Inicial): {file_path}")
+                    # CASO A: Ficheros Testigo o Metadatos (Autorreparables)
+                    if ".sipa_root" in f_str or "identity.json" in f_str:
+                        with open(file_path, 'w', encoding='utf-8') as f:
+                            if "identity.json" in f_str:
+                                f.write('{"status": "initialized", "owner": "Daniel Miñana"}')
+                            else:
+                                f.write('') # .sipa_root vacío
+                        self.logger.info(f"Fichero testigo generado automáticamente: {f_str}")
+                        continue
+
+                    # CASO B: Base de Datos (Se delega al PersistenceManager)
+                    if "sistema.db" in f_str:
+                        self.logger.warning(f"Certificación diferida (DB inicial): {f_str}")
                         continue
                     
-                    msg_error = f"Fichero vital ausente: {file_path}"
+                    # CASO C: Archivos de Código (Irreparables automáticamente)
+                    msg_error = f"Fichero lógico ausente (Requiere intervención): {f_str}"
                     self.logger.error(msg_error)
                     raise InfrastructureError(msg_error)
             
@@ -84,3 +95,7 @@ class EnvironmentManager:
         except Exception as e:
             self.logger.error(f"Error sistémico en validación: {e}")
             return False
+
+# ==========================================================
+# FIRMADO: Daniel Miñana | SIPA v0.2.5 - Resilience Guard
+# ==========================================================
