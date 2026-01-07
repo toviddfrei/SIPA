@@ -1,7 +1,7 @@
 """
-MÓDULO: SENTINEL_fhs-CA (v0.0.2)
-DESCRIPCIÓN: Sistema de auditoría forense y monitorización de integridad.
-             Actúa como 'mochila' de seguridad para el PROYECTO SIPA.
+MÓDULO: SENTINEL_fhs-CA (v0.0.2.1)
+DESCRIPCIÓN: Sistema de auditoría forense con logs de alta intensidad.
+             Implementa integridad SHA-256 (archivo oculto) y análisis AST.
 AUTOR: Daniel Miñana & Gemini
 FECHA: 2026-01-07
 """
@@ -16,48 +16,46 @@ import hashlib
 from datetime import datetime
 from threading import Thread
 
-# === CONFIGURACIÓN DE ESTRUCTURA PROFESIONAL ===
-# Definimos las rutas relativas para garantizar la portabilidad del módulo.
+# === CONFIGURACIÓN DE RUTAS Y CONSTANTES ===
+# Forzamos la detección de la ruta absoluta para evitar fallos de importación
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 FICHA_DIR = os.path.join(BASE_DIR, "ficha_tecnica")
 
-# Aseguramos la existencia del ecosistema de archivos del módulo
-for d in [LOG_DIR, FICHA_DIR]:
-    os.makedirs(d, exist_ok=True)
+# Garantizamos estructura de directorios
+os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(FICHA_DIR, exist_ok=True)
 
+# Centralización de Archivos Críticos
 LOG_FILE = os.path.join(LOG_DIR, "SIPA_Audit_Master.log")
+SELLO_FILE = os.path.join(FICHA_DIR, ".sipa_secret") 
 
+# Configuración de Logging con nivel INFO para máxima visibilidad
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
-    format='%(asctime)s | %(message)s',
+    format='%(asctime)s | [%(levelname)s] | %(message)s',
     filemode='a'
 )
 
 class CyberAuditForense:
     """
-    Clase principal de Sentinel encargada de la monitorización dual:
-    1. Estática (Análisis de código y seguridad SHA-256).
-    2. Dinámica (Uso de recursos y telemetría en tiempo real).
+    Motor de auditoría con logs específicos para depuración de arranque.
     """
 
     def __init__(self):
-        """Inicializa el rastreo obteniendo la identidad del proceso raíz."""
+        """Inicializa el sistema y registra el estado del entorno."""
         self.root_pid = os.getpid()
         self.proceso_raiz = psutil.Process(self.root_pid)
         self.visto = set()
-        self.secret_file = os.path.join(BASE_DIR, ".sipa_secret")
-        self.log_evento("SISTEMA", f"Sentinel v0.0.2 activo sobre PID {self.root_pid}")
+        
+        # Log de inicialización
+        self.log_evento("INIT", f"Instanciando CyberAuditForense. PID: {self.root_pid}")
+        self.log_evento("PATH", f"BASE_DIR detectado en: {BASE_DIR}")
+        self.log_evento("PATH", f"SELLO_FILE configurado en: {SELLO_FILE}")
 
     def log_evento(self, categoria, mensaje):
-        """
-        Estandariza la salida de eventos para su posterior lectura por el panel SIPA.
-        
-        Args:
-            categoria (str): Etiqueta del evento (SISTEMA, SEGURIDAD, ALERTA).
-            mensaje (str): Descripción detallada del suceso.
-        """
+        """Salida dual (Consola/Fichero) con formato de auditoría."""
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         linea = f"Estado: {categoria} | {mensaje} | Módulo: FHS-CyberAudit | Timestamp: {ts}"
         logging.info(linea)
@@ -65,104 +63,106 @@ class CyberAuditForense:
 
     def verificar_integridad_sha256(self, target):
         """
-        BLOQUE 1 - SEGURIDAD: Implementa el 'Sello de Veracidad'.
-        Utiliza el algoritmo SHA-256 para detectar cualquier alteración en el código.
-        
-        Pedagogía: Se lee en bloques de 4KB para evitar picos de memoria al 
-        procesar archivos grandes (eficiencia de buffer).
+        BLOQUE 1: SEGURIDAD.
+        Verifica el hash del archivo y gestiona el sello .sipa_secret.
         """
+        self.log_evento("CHECK_INTEGRIDAD", f"Iniciando verificación para: {target}")
+        
         sha256_hash = hashlib.sha256()
         try:
             with open(target, "rb") as f:
                 for byte_block in iter(lambda: f.read(4096), b""):
                     sha256_hash.update(byte_block)
             current_hash = sha256_hash.hexdigest()
+            self.log_evento("HASH_CALCULADO", f"SHA256: {current_hash}")
         except Exception as e:
-            self.log_evento("ERROR_CRÍTICO", f"No se pudo generar hash: {e}")
+            self.log_evento("ERROR_CRÍTICO", f"No se pudo leer el archivo target: {e}")
             return False
 
-        print(f"DEBUG: Buscando secreto en: {self.secret_file}")
-        # Lógica de persistencia del secreto: Si no existe, se crea (Primer arranque)
-        if not os.path.exists(self.secret_file):
-            with open(self.secret_file, "w") as f:
-                f.write(current_hash)
-            self.log_evento("SISTEMA", "Sello inicial generado. Integridad blindada.")
-            return True
+        # Verificamos existencia del sello
+        if not os.path.exists(SELLO_FILE):
+            self.log_evento("SEGURIDAD", f"Sello no encontrado. Intentando crear: {SELLO_FILE}")
+            try:
+                with open(SELLO_FILE, "w") as f:
+                    f.write(current_hash)
+                self.log_evento("SISTEMA", "¡ÉXITO! Sello .sipa_secret generado correctamente.")
+                return True
+            except Exception as e:
+                self.log_evento("ERROR_CRÍTICO", f"No se pudo escribir el sello: {e}")
+                return False
 
-        with open(self.secret_file, "r") as f:
-            stored_hash = f.read().strip()
-
-        return current_hash == stored_hash
+        # Si el sello existe, comparamos
+        try:
+            with open(SELLO_FILE, "r") as f:
+                stored_hash = f.read().strip()
+            
+            self.log_evento("COMPARACIÓN", f"Hash actual vs guardado en {SELLO_FILE}")
+            
+            if current_hash == stored_hash:
+                self.log_evento("INTEGRIDAD", "OK - El código coincide con el sello original.")
+                return True
+            else:
+                self.log_evento("ALERTA_CRÍTICA", "¡FIRMA NO COINCIDE! Posible manipulación.")
+                return False
+        except Exception as e:
+            self.log_evento("ERROR_CRÍTICO", f"Error leyendo el sello existente: {e}")
+            return False
 
     def auditar_contenido_fichero(self, target):
-        """
-        BLOQUE 1 - EXCELENCIA: Análisis AST (Abstract Syntax Tree).
-        Analiza la estructura del código sin ejecutarlo para medir su calidad documental.
-        
-        Valor: Asegura que el aprendizaje automático de SIPA tenga fuentes 
-        bien documentadas (docstrings).
-        """
+        """BLOQUE 1: EXCELENCIA. Análisis AST profundo."""
+        self.log_evento("AST_START", f"Analizando estructura de: {target}")
         try:
             with open(target, "r", encoding="utf-8") as f:
                 tree = ast.parse(f.read())
             
-            nodos_doc, total_nodos, alertas_logica = 0, 0, 0
-
+            nodos_doc, total_nodos = 0, 0
             for node in ast.walk(tree):
-                # Verificamos si las estructuras clave tienen documentación
                 if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)):
                     total_nodos += 1
                     if ast.get_docstring(node):
                         nodos_doc += 1
-                    else:
-                        nombre = getattr(node, 'name', 'Raíz')
-                        self.log_evento("AVISO_DOC", f"Código huérfano de docstring en: {nombre}")
-
-            densidad = (nodos_doc / total_nodos) * 100 if total_nodos > 0 else 0
-            self.log_evento("SALUD_LÓGICA", f"Densidad Docstrings: {densidad:.2f}%")
             
+            densidad = (nodos_doc / total_nodos) * 100 if total_nodos > 0 else 0
+            self.log_evento("SALUD_LÓGICA", f"Densidad Docstrings: {densidad:.2f}% ({nodos_doc}/{total_nodos})")
         except Exception as e:
-            self.log_evento("ERROR_AUDITORÍA", f"Fallo en motor AST: {str(e)}")
+            self.log_evento("ERROR_AST", f"Fallo en inspección: {e}")
 
     def monitor_recursos_continuo(self):
-        """
-        BLOQUE 2 - MONITOREO: Hilo de telemetría dinámica.
-        Rastrea el consumo de CPU y RAM de forma persistente.
-        """
+        """BLOQUE 2: MONITOREO. Registro de telemetría constante."""
+        self.log_evento("SNIFFER", "Hilo de monitorización dinámico iniciado.")
         while True:
             try:
-                hijos = self.proceso_raiz.children(recursive=True)
-                for h in [self.proceso_raiz] + hijos:
-                    with h.oneshot():
-                        pid, cpu, mem = h.pid, h.cpu_percent(), h.memory_info().rss / (1024 * 1024)
-                        if cpu > 0.1: # Filtro de ruido para el log
-                            self.log_evento("CONSUMO", f"PID: {pid} | CPU: {cpu}% | RAM: {mem:.2f}MB")
-                time.sleep(2) # Pausa pedagógica para no sobrecargar el sistema
+                cpu = self.proceso_raiz.cpu_percent()
+                mem = self.proceso_raiz.memory_info().rss / (1024 * 1024)
+                # Registro cada 10 segundos para no saturar pero mantener rastro
+                self.log_evento("HEARTBEAT", f"Salud Proceso -> CPU: {cpu}% | RAM: {mem:.2f}MB")
+                time.sleep(10)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
+                self.log_evento("SISTEMA", "Proceso terminado. Cerrando monitor.")
                 break
 
     def ejecutar_auditoria(self, target):
-        """Coordina las fases de la mochila según el checklist."""
-        # Fase 1: Integridad (Prioridad máxima)
+        """Coordinador del ciclo de vida de Sentinel."""
+        self.log_evento("AUDIT_START", "Iniciando secuencia completa de auditoría...")
+        
+        # 1. Integridad SHA-256
         if not self.verificar_integridad_sha256(target):
-            self.log_evento("ALERTA_CRÍTICA", "¡INTEGRIDAD VIOLADA! El código ha cambiado.")
+            self.log_evento("STOP", "Bloqueo por fallo de integridad.")
             return False
         
-        self.log_evento("INTEGRIDAD", "OK - Sello verificado.")
-
-        # Fase 2: Auditoría de Excelencia
+        # 2. Análisis AST
         self.auditar_contenido_fichero(target)
 
-        # Fase 3: Lanzamiento de Monitorización en segundo plano
+        # 3. Lanzamiento de Telemetría
         Thread(target=self.monitor_recursos_continuo, daemon=True).start()
         
-        self.log_evento("SIPA_READY", "Sentinel operativo en modo vigilancia.")
+        self.log_evento("SIPA_READY", "Sentinel v0.0.2.1 operativa y vigilando.")
         return True
 
-# --- PUNTO DE ENTRADA (BOOTSTRAP) ---
+# --- BOOTSTRAP ---
 sonda = CyberAuditForense()
 
 if __name__ == "__main__":
-    # Permite ejecución manual: python sentinel_v002_fhs_CA.py mi_script.py
+    # Si se ejecuta este script solo, se audita a sí mismo
     objetivo = sys.argv[1] if len(sys.argv) > 1 else sys.argv[0]
     sonda.ejecutar_auditoria(objetivo)
