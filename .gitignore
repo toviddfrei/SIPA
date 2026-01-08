@@ -53,3 +53,6 @@ logs/
 # --- TEMP ---
 tmp/
 temp/
+
+# --- CONSTRUCTOR
+constructor/

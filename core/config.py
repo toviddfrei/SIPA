@@ -126,13 +126,13 @@ MODULES_STATE = {
 # =====================================================================
 
 # Nivel 1: El Contexto (Context)
-SIPA_LEVEL_1 = ["PERSONAL", "PROYECTO SIPA", "TRAYECTORIA"]
+SIPA_LEVEL_1 = ["PERSONAL", "PROYECTO SIPA", "TRAYECTORIA", "PROYECTO FHS-CYBERAUDIT"]
 
 # Nivel 2: La Acción (Action)
 SIPA_LEVEL_2 = [
     "BUG", "MEJORA", "DOC", "PENDIENTE", "COMPLETADO", 
     "TAREA", "NOTA", "DAILY", "SPEC", "CHAT", 
-    "LABORAL", "FORMATIVA", "HITO"
+    "LABORAL", "FORMATIVA", "HITO", "PERFIL", "LOGRO"
 ]
 
 # ==========================================================

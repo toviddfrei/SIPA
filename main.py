@@ -11,20 +11,51 @@
 # Implementa la "Regla del 30%" para auditoría de rendimiento.
 # ==========================================================
 
+# ==========================================================
+# PUNTO AUDITORIA FHS-CYBERAUDIT (TEMPORAL EN DESARROLLO)
+# ==========================================================
+try:
+    import sys
+    from external.sentinel_fhs_CA import sentinel_v002_fhs_CA as sentinel
+    
+    # Si ejecutar_auditoria devuelve False, detenemos el proceso
+    if not sentinel.sonda.ejecutar_auditoria(sys.argv[0]):
+        print("❌ [BLOQUEO FORENSE] La integridad de SIPA ha sido comprometida. Abortando arranque.")
+        sys.exit(1) # <--- Aquí es donde se clava el sistema físicamente
+        
+except ImportError:
+    print("⚠️ Sentinel no encontrado. Continuando sin mochila de seguridad.")
+
+# ==========================================================
+# IMPORTACIÓN DE MÓDULOS EXTERNOS
+# ==========================================================
 import time
 import socket
 import struct
 import sys
 import os
 
+# ==========================================================
+# UBICACIÓN DE LAS RUTAS LOCALES
+# ==========================================================
 # Aseguramos que el core sea visible independientemente del punto de ejecución
+# ¿Qué está haciendo? Mira dónde está este archivo ahora mismo, 
+# obtén la dirección completa de su carpeta y añádela a tu lista de búsqueda 
+# de bibliotecas.
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# ==========================================================
+# IMPORTACIÓN DE MÓDULOS LOCALES
+# ==========================================================
 from core.guard.environment_manager import EnvironmentManager
 from core.logger.config_loggers import setup_logger
 from core.persistence import PersistenceManager
 from interface.splash import SipaSplash
 from interface.main_dashboard import MainDashboard
+
+# ==========================================================
+# CERTIFICACIÓN NTP HORA EXTERNA
+# ==========================================================
 
 def get_ntp_time(host="pool.ntp.org"):
     """
@@ -46,6 +77,10 @@ def get_ntp_time(host="pool.ntp.org"):
     except Exception:
         return None
 
+# ==========================================================
+# ARRANQUE SIPA
+# ==========================================================
+
 def start_engine():
     """
     MOTOR DE IGNICIÓN SIPA:
@@ -55,6 +90,7 @@ def start_engine():
     4. Evalúa rendimiento y transfiere el mando al Dashboard.
     """
     # Inicio de telemetría de precisión
+    # Iniciado el cronometro para la metríca de duración arranque
     start_perf = time.perf_counter()
     
     # 1. PREPARACIÓN Y TELEMETRÍA INICIAL
