@@ -22,7 +22,7 @@ import re
 
 # Anclaje de rutas para alcance del core y persistencia
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.persistence import PersistenceManager
+from core.persistence_old import PersistenceManager
 from core.config import (
     SIPA_LEVEL_1, SIPA_LEVEL_2, 
     DIR_EVID_LABORAL, DIR_EVID_FORMAT

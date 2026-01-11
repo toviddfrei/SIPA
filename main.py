@@ -49,7 +49,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # ==========================================================
 from core.guard.environment_manager import EnvironmentManager
 from core.logger.config_loggers import setup_logger
-from core.persistence import PersistenceManager
+from core.persistence_old import PersistenceManager
 from interface.splash import SipaSplash
 from interface.main_dashboard import MainDashboard
 

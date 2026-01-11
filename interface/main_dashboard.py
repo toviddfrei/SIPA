@@ -16,7 +16,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from core.config import APP_TITLE, BG_COLOR_PRIMARY, SIPA_LEVEL_1, SIPA_LEVEL_2
-from core.persistence import PersistenceManager
+from core.persistence_old import PersistenceManager
 # NUEVA IMPORTACIÓN PARA EL CRONOGRAMA VITAL
 from components.sipa_timeline import SipaTimeline
 

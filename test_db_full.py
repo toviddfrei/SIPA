@@ -9,7 +9,7 @@
 # Descripción: Test de estrés y verificación de tablas para la DB migrada.
 # ==========================================================
 
-from core.persistence import PersistenceManager
+from core.persistence_old import PersistenceManager
 import os
 
 def run_full_audit():

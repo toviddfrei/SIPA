@@ -60,11 +60,16 @@ UTILS_DIR  = DIR_CORE / "utils"
 # Variable Maestra para compatibilidad con sistemas legados u os.path
 PROJECT_ROOT = str(BASE_DIR)
 
+# --- NUEVO: Mapeo para el Motor Web SIPA ---
+DIR_WEB_ENGINE = BASE_DIR / "web_engine"
+TEMPLATES_DIR  = DIR_WEB_ENGINE / "templates"
+STATIC_DIR     = DIR_WEB_ENGINE / "static"
+
 # Listas para el Guardián (SIPAbap)
 CRITICAL_DIRS = [DIR_LOGS, DIR_DATA, DIR_DB, DIR_CORE, DIR_INTERFACE, DIR_EVIDENCE, DIR_EXTERNAL]
 STRUCTURE_DIRS = [
     DIR_INBOX, DIR_ARCHIVE, DIR_KNOWLEDGE, 
-    LOGGER_DIR, DIR_EVID_LABORAL, DIR_EVID_FORMAT, DIR_COMPONENTS
+    LOGGER_DIR, DIR_EVID_LABORAL, DIR_EVID_FORMAT, DIR_COMPONENTS, DIR_WEB_ENGINE, TEMPLATES_DIR, STATIC_DIR
 ]
 
 # =====================================================================
