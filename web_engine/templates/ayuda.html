@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Estilos para los bloques interactivos */
+    .ayuda-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 columnas fijas por fila */
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    .ayuda-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 12px;
+        transition: all 0.3s ease; /* Suavidad en el cambio */
+        text-align: center;
+        cursor: pointer;
+    }
+
+    /* Efecto Hover: Cambia el fondo y eleva el bloque */
+    .ayuda-item:hover {
+        background: var(--accent-blue-light, #0d6efd); /* El fondo cambia al azul de tu tema */
+        transform: translateY(-5px);
+        border-color: #fff;
+    }
+
+    .ayuda-item i {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #74c0fc;
+    }
+
+    .ayuda-item:hover i, .ayuda-item:hover h4, .ayuda-item:hover p {
+        color: white !important; /* Todo se vuelve blanco al resaltar */
+    }
+
+    .ayuda-item h4 { margin-bottom: 10px; font-weight: bold; }
+    .ayuda-item p { font-size: 0.85em; opacity: 0.8; line-height: 1.4; }
+
+    /* Ajuste para móviles: de 3 a 1 columna */
+    @media (max-width: 768px) {
+        .ayuda-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<section class="card">
+    <header style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">
+        <span class="status-indicator">● SOPORTE S.I.P.A.</span>
+        <h1><span class="icon">❓</span> Centro de Ayuda <small class="text-muted">v{{ context.version }}</small></h1>
+        <p>Protocolos de operación y guía del usuario root.</p>
+    </header>
+    
+    <div class="ayuda-grid">
+        <div class="ayuda-item" > /*</div>onclick="window.open('{{ url_for('static', filename='manual_tecnico/index.html') }}', '_blank')">*/
+            <i class="fas fa-book-open"></i>
+            <h4>Manual IT</h4>
+            <p>Documentación técnica y guías MkDocs.</p>
+        </div>
+
+        <div class="ayuda-item">
+            <i class="fas fa-map-signs"></i>
+            <h4>Roadmap</h4>
+            <p>Hitos del proyecto y ciclo de vida operativo.</p>
+        </div>
+
+        <div class="ayuda-item">
+            <i class="fas fa-rss"></i>
+            <h4>Noticias</h4>
+            <p>Feed automatizado de ciberseguridad ética.</p>
+        </div>
+
+        <div class="ayuda-item">
+            <i class="fas fa-shield-alt"></i>
+            <h4>Seguridad</h4>
+            <p>Verificación de integridad SHA-256 activa.</p>
+        </div>
+
+        <div class="ayuda-item">
+            <i class="fas fa-user-shield"></i>
+            <h4>Acceso Root</h4>
+            <p>Gestión de credenciales y administración.</p>
+        </div>
+
+        <div class="ayuda-item">
+            <i class="fas fa-code-branch"></i>
+            <h4>Versiones</h4>
+            <p>Historial de cambios y despliegue Git.</p>
+        </div>
+    </div>
+
+    <footer style="margin-top: 40px; font-size: 0.8em; opacity: 0.6; text-align: right;">
+        Última sincronización de documentación: 2025-12-21 | Nodo: <span style="color: #20c997;">Activo</span>
+    </footer>
+</section>
+{% endblock %}

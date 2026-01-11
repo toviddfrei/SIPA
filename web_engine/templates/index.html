@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card profile-hero">
+    <header>
+        <span class="status-indicator">● System Integrity: SHA-256 Verified</span>
+        <h1>{{ context.user.nombre }}</h1>
+        <p class="specialty-tag">
+            <strong>{{ context.user.profesion }}</strong> | 
+            <span class="cert">{{ context.user.especialidad }}</span>
+        </p>
+    </header>
+    
+    <div class="bio-intro" style="margin-top: 20px;">
+        <p>{{ context.user.presentacion_breve }}</p> 
+        <p style="font-size: 0.9em; opacity: 0.8;">{{ context.user.bio_larga }}</p>
+    </div>
+
+    <div class="skills-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+        {% for skill in context.user.habilidades %}
+            <span class="skill-badge" style="background: var(--accent-blue-light); padding: 4px 10px; border-radius: 4px; font-size: 0.8em;">{{ skill }}</span>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="card info-transparency" style="border-left: 4px solid var(--accent-green);">
+    <h3><span class="icon">🛡️</span> Auditoría de Sesión Activa</h3>
+    <div class="grid-transparency" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; font-size: 0.85em;">
+        <div><strong>Integridad:</strong> {{ sys.codename }} OK</div>
+        <div><strong>Tráfico:</strong> Monitorizado (WAF Activo)</div>
+        <div><strong>Edad:</strong> {{ context.user.edad }} años</div>
+    </div>
+</div>
+
+<section id="bitacora" class="card">
+    <h2><span class="icon">💬</span> Bitácora de Actividad</h2>
+    <div id="noticias-recientes">
+        {% if bitacora %}
+            {% for nota in bitacora %}
+            <article class="decision-box" style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <small class="hash-text">{{ nota.fecha }}</small>
+                <h4 style="margin: 5px 0;">{{ nota.evento }}</h4>
+            </article>
+            {% endfor %}
+        {% else %}
+            <p class="hash-text">Esperando la próxima inyección de datos del motor...</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
