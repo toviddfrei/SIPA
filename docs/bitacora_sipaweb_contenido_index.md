@@ -299,4 +299,178 @@ Presento mi recorrido profesional en formato cronológico. Soy consciente de que
 
 - Ahora sí, voy a realizar el commit, publico la versión 1.4.2 Páginas index.html ok + sobre-mi init
 
-#### Cerrada verificada exhaustivamente y publicada
+Pregunta: Ya esta publicada, pero se me ha pasado un par de detalles, icono pestaña, logo, voy a incluirlo y la cierro definitivamente
+
+- Me traigo lo que ya teniamos hablado, incluso una nota perdida:
+
+- El Toque Final: El Icono y el Logotipo
+  - Mencionas que faltan el icono para la pestaña (favicon) y el logotipo. Para no detener el test, te sugiero lo siguiente:
+    - Icono (favicon.ico): Puedes usar tu avatargithub.png y pasarlo por un generador de favicons.
+    - Logotipo: En esta fase de "Personal Branding", tu logotipo es tu propio nombre con una tipografía limpia.
+
+- Nota técnica en la clase SipaFileIndex: He detectado una pequeña errata en tu código: escribiste "nombre_sito:" (falta la 'i'). Debería ser "nombre_sitio:" para que el renderizador lo reconozca. RECTIFICADO.
+
+Pregunta: Me he descargado el logo creo que más adecuado, lo he pasado a un fichero png de 512 x 512 y lo utilizo para todo, de momento no voy a entrar mucho más la marca será si lo es en un futuro,
+
+- Entiendo perfectamente, Daniel. Vamos a hacerlo directo y profesional para que no tengas que pelearte con conversores online.
+
+Aquí tienes el diseño final: un corazón "circuiteado" que representa esa tecnología que llevas en el ADN, eliminando todo el texto para que sea un símbolo puro. He usado una paleta de azules eléctricos y cianes que combinan a la perfección con el azul por defecto de Pico.css.
+
+![Logo](../core/assets/img/danielminanamontero-logo.pngcore/assets/img/danielminanamontero-logo.png)
+
+- Ajuste de Estilo: De Verde a Azul (Pico.css Custom)
+Como queremos que la web respire ese azul del logo y de Pico.css, vamos a actualizar tu custom.css. He eliminado las referencias al verde y he ajustado las variables para que el "Azul ADN" sea el protagonista.
+
+Fichero: css/custom.css
+
+```css
+/* SIPAweb Custom CSS - Versión Azul ADN */
+:root {
+    /* Ajustamos los colores primarios de Pico al azul del logo */
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --primary-focus: rgba(0, 123, 255, 0.25);
+    --primary-inverse: #FFF;
+}
+
+/* Hero Section con el nuevo Logo */
+.hero-section {
+    background-color: #0b111a; /* Fondo oscuro tecnológico */
+    border-bottom: 2px solid var(--primary);
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.hero-logo {
+    max-width: 150px;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(0, 123, 255, 0.5));
+}
+
+/* Ajuste de tablas para que no sean "frías" */
+table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+thead th {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Etiquetas (Tags) */
+ins {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.8rem;
+}
+```
+
+- Actualización en base.html
+  - Para que el logo y el favicon se vean, asegúrate de que tu base.html tenga estas líneas en el \<head>:
+
+```html
+<link rel="icon" type="image/x-icon" href="img/favicon.ico">
+
+<link rel="stylesheet" href="css/custom.css">
+```
+
+- Y en el cuerpo, donde quieras mostrar el logo (por ejemplo, en el Hero):
+
+```html
+<img src="{{ hero_bg }}" alt="Logo Daniel Miñana" class="hero-logo">
+```
+
+- ¿Te gustaría que te ayude a integrar el logo directamente en el código del orquestador para que se asegure de que siempre esté en su sitio al construir?
+
+Pregunta: Casi, que paramos aqui hoy, me voy a currar, implementarmos el logo mañana y cerramos index.html, definitivamente, lo siguiente, que todo el site reconozca el logo y unificar las cabeceras publicar versión y nos liamos a terminar sobre-mi. Pero ya mañana. Gracias
+
+Registro de Sesión | Cierre de Jornada v1.5.1
+Pregunta del usuario: "Casi, que paramos aquí hoy... implementamos el logo mañana y cerramos index.html definitivamente... Gracias."
+
+¡Entendido, Daniel! Es un excelente punto para hacer el alto. Has logrado pivotar la identidad del sitio hacia tu perfil personal, has definido la estructura de las 5 páginas principales y ya tienes el concepto visual del "Corazón Tecnológico" que unificará toda la estética en azul.
+
+- Estado del Proyecto para mañana:
+  - Identidad Visual: Logo conceptual generado. Pendiente convertir a .png (Logo Hero) y .ico (Favicon) para integrarlos en el flujo de asegurar_activos_core.
+  - CSS: Hoja de estilos custom.css lista para la transición del verde al Azul ADN.
+  - Estructura: index.md y las clases de provisión actualizadas con el enfoque "Hola, soy Daniel".
+  - Orquestador: Preparado para replicar la cabecera y el logo en todo el sitio de forma automatizada.
+
+- Hoja de ruta para nuestra próxima sesión:
+  - Integración de Activos: Meteremos el logo y el favicon en el orquestador.
+  - Unificación de Cabeceras: Ajustaremos el base.html para que el logo brille en todas las secciones.
+  - Publicación de Versión: Haremos el commit final de la estructura y el diseño.
+  - Contenido de Sobre-Mí: Empezaremos a volcar toda esa experiencia de NCR y tu trayectoria formativa en los bloques bento.
+
+- Que tengas una buena jornada de trabajo en NCR. Mañana cerramos ese Index y dejamos la web lista para lucir tu trayectoria.
+
+- ¡Buen turno y hasta mañana!
+
+Pregunta: Vale, pues empezamos con el final, incluimos el favicon en la pestaña y el logo junto al nombre en el bloque Hero, estoy un poco extrañado que me comentes de incluirlo en el build, si lo incluimos en la base.html no es suficiente?, la base es la que crea todas las paginas, no solo index, tambien sobre-mi y las demás, cuando cargue la plantilla cargara tambien el favicon y el logo no?, o no he entendido, en todo caso, incluirlo en def asegurar_activos_core, para poder rescatarlos o incluso modificarlos desde un solo punto, lo incluyo en el diccionario activos = [], no?
+
+Registro de Sesión | Sincronización de Identidad Visual v1.5.2
+Pregunta del usuario: "¿Si lo incluyo en base.html no es suficiente? ¿Por qué dices de incluirlo en el build? ¿Lo incluyo en el diccionario activos de asegurar_activos_core?"
+
+- Daniel, tienes toda la razón: la plantilla base.html es el corazón visual y, efectivamente, una vez que pongas las etiquetas allí, todas las páginas las heredarán.
+
+Cuando me refería a "incluirlo en el build", me refería precisamente a lo que tú has detectado con perspicacia técnica: la gestión de archivos. Si solo lo pones en el HTML pero el archivo físico no está en la carpeta de producción (img/), la web mostrará un error de "imagen no encontrada".
+
+Por tanto, el plan correcto es el que propones: centralizarlo en el diccionario de activos para que el orquestador se encargue de "repartir" los archivos reales.
+
+- Actualización de sipaweb.py
+Añade el favicon y el logo a tu lista de activos para que el sistema los proteja y sincronice:
+
+```python
+def asegurar_activos_core(self):
+        # ...
+        activos = [
+            ("", "base.html", self.templates),
+            ("", "custom.css", os.path.join(self.raiz, "css")),
+            ("img", "avatargithub.png", os.path.join(self.raiz, "img")),
+            ("img", "sobre-mi-bg.png", os.path.join(self.raiz, "img")),
+            ("img", "favicon.ico", os.path.join(self.raiz, "img")), # Nuevo: Favicon
+            ("img", "logo-adn.png", os.path.join(self.raiz, "img")), # Nuevo: Tu logo azul
+            ("pdf", "2018_porfolio.pdf", os.path.join(self.raiz, "pdf"))
+        ]
+        # ... resto de la lógica de copiado
+```
+
+- Ajuste en base.html (La cabecera universal)
+  - Para que el logo aparezca junto a tu nombre y el favicon en la pestaña, tu base.html debería quedar así en la zona del Header/Hero:
+
+```html
+<head>
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <title>{{ titulo }} | {{ nombre_sitio }}</title>
+    ...
+</head>
+<body>
+    <header class="container">
+        <hgroup>
+            <h1>
+                <img src="img/logo-adn.png" alt="SIPA Logo" style="height: 50px; vertical-align: middle; margin-right: 10px;">
+                {{ nombre_sitio }}
+            </h1>
+            <h2>{{ subtitulo }}</h2>
+        </hgroup>
+    </header>
+    ...
+</body>
+```
+
+- ¿Por qué hacerlo así? (Buenas prácticas)
+  - Mantenimiento único: Si mañana decides cambiar el logo por uno más moderno, solo sustituyes el archivo en core/assets/img/ y el orquestador lo actualizará en todo el sitio (Index, Sobre-mí, Proyectos...) de forma atómica.
+  - Consistencia: Evitas que el navegador "cachee" versiones antiguas si usas el sistema de auditoría SHA-256 que ya implementamos.
+
+- ¿Te parece si realizas esta actualización en el diccionario de activos y el HTML para verificar que el logo "viaja" correctamente a todas las páginas? Una vez lo veas funcionando, el sitio tendrá ya una coherencia visual total.
+
+Pregunta: He realizado algunos ajustes, para el favicon.ico y el logo, ya están implemtados, ahora cambio el color verde por azul y dejamos el index.html preparado y publicado todo.
+
+- He realizado la prueba final eliminado todos los html que se crean, eliminando base.html y custom.css, y ha funcionado perfectamente, ha generado todas las páginas ya recogen el favicon.ico y el logo, ha cambiado al azul seleccionado y realmente me gusta.
+- Voy a crear el commit, actualizo la versión a 1.4.3 Incluir logo y favicon
+
+#### Cerrada revisada exhaustivamente y publicada

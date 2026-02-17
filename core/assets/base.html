@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="SIPAweb - Identidad Digital Automática de Daniel Miñana">
-    <title>{{ titulo }} | SIPAweb</title>
+
+    <title>{{ titulo | default('SIPAweb') }}</title>
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="css/custom.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-    <header class="hero-sipa" style="background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4)), url('{{ hero_bg | default('img/avatargithub.png') }}');">
+    <header class="hero-sipa" style="background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4)), url('{{ hero_bg }}');">
         <nav class="container">
             <ul>
                 <li>
                     <a href="index.html" class="logo-container">
-                        <i class="ph ph-cpu logo-icon"></i> 
+                        <img src="img/danielminanamontero-logo.png" alt="Logo de Daniel Miñana" class="logo-image" style="height: 100px; vertical-align: middle">
                         <span class="logo-text">{{ nombre_sitio | default('SIPA') }}</span>
                     </a>
                 </li>

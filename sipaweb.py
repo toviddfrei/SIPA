@@ -81,7 +81,7 @@ class SipaFileIndex(SipaModule):
             content = (
                 "---\n"
                 "titulo: Hola, soy Daniel\n"
-                "nombre_sito: Daniel Miñana Montero\n"
+                "nombre_sitio: Daniel Miñana Montero\n"
                 "rol: Propietario\n"
                 "subtitulo: Cuándo la tecnología está en tú ADN.\n"
                 "hero_bg: img/avatargithub.png\n"
@@ -324,6 +324,8 @@ class SipaWebBuilder:
             ("", "custom.css", os.path.join(self.raiz, "css")),
             ("img", "avatargithub.png", os.path.join(self.raiz, "img")),
             ("img", "sobre-mi-bg.png", os.path.join(self.raiz, "img")),
+            ("img", "favicon.ico", os.path.join(self.raiz, "img")), # Nuevo: Favicon
+            ("img", "danielminanamontero-logo.png", os.path.join(self.raiz, "img")), # Nuevo: Tu logo azul
             ("pdf", "2018_porfolio.pdf", os.path.join(self.raiz, "pdf"))
         ]
         

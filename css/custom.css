@@ -7,7 +7,7 @@
  */
 
 :root { 
-    --primary: #39ff14; 
+    --primary: hsl(199, 100%, 54%); 
     --spacing-grid: 1rem;
     --sipa-max-width: 1200px;
 }
