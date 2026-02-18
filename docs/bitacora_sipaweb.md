@@ -1556,6 +1556,139 @@ Pregunta del usuario: "¿Te parece paramos aquí y revisamos esto? Voy a persona
 
 - ¿Te gustaría que al retomar la sesión hagamos una auditoría rápida de cómo quedan los nuevos Frontmatters del Index y el Sobre-mí para asegurar que la "Identidad Variable" sigue fluyendo bien?
 
+Pregunta: Ya está publicado index.html y resto de páginas, ahora nos centramos en sobre-mi.html, terminar con el contenido y cerrar la segunda página. Pero cuándo terminemos sobre-mi, quiero iniciar dos temas, uno análisis de el sitio web, y estructura de página interior, tengo que tener claro como transitarán los bloques hacía su página, y sobre todo donde ubicaremos la carpeta que crecerá seguro con los ficheros .md, lo hacemos por temas, lo hacemos en una sola, bueno algunas preguntas que aún tengo que contestarme, lo dicho nos liamos con sobre-mi. Falta a mi entender un texto que me describa, o que describa el momento en el que estoy, o mejor un texto que describa donde empece y donde estoy ahora, voy a preparar un texto y lo revisamos.
+
+- Soy una persona introvertida, por lo tanto ya hablar de mi me cuesta, pero me describiría como alguien constante, que persigue sus objetivos y que se plantea nuevos objetivos, una vez lo consiga o no, me apasiona la tecnología y la historia, y mi instinto me hace muchas veces comenzar a ver temas como autodidacta y que finalmente he recurrido a formación especifica para profundizar en ellos, una anecdota de hace muchos años que creo que me dibuja perfectamente: me situo en los años 2000 recién pasado el caos de las máquinas registradoras, empecé a trabajar a media jornada como técnico informático en plantilla a media jornada en una multinacionl inglesa, nada de momento era algo controlable un servidor windows, y un equipo oficina era más controlar la conexión con UK que otra cosa, pero crecio rapidamente y se me propuso instalar la red local completa, desde 0, pues en aquel entonces mi conocimiento en redes era muy básico, era casí más técnico que práctico, bueno unos años despues, despues de recorrer el camino descrito comence en plan autodidacta, pase por formación especifica, teorico-practica, y llegue para mí al punto más alto, prepare el examen CCNA incluso con el curso práctico de CISCO y después de completar el temario con una gran nota, temario en español, prácticas en español, profesores en español, llegue al examen para la certificación que era en ingles, y claro algo que ya tenia previsto, mi ingles es básico y no supere la prueba, bueno no recuerdo bien pero creo que no pase del nombre. Con ello os presento mi personalidad, soy constante, disciplinado, profesional y siempre con la pasión por crecer día a día. Tengo mil de anecdotas más pero no acabaria, os invito a navegar por mis trayectorias, tanto profesional como formativa y como punto final os comentaría que actualmente estoy trabajando para NCR ESPAÑA SL (NCR VOYIX) como técnico de campo IT (CE customer engineer) en las ramas de retail y hospitality.
+
+Registro de Sesión | Elaboración de Narrativa "Sobre-mí" v1.5.4
+Pregunta del usuario: "He publicado la v1.4.3. Ahora nos centramos en sobre-mi.html. Te presento un texto que describe mi personalidad, mis inicios y una anécdota (CCNA/Cisco) que me define para que me ayudes a revisarlo."
+
+- Daniel, esa anécdota del examen CCNA de Cisco es el "gancho" perfecto. Humaniza tu perfil, muestra tu capacidad para enfrentarte a retos técnicos de alto nivel y, sobre todo, deja claro que no te asusta el estudio profundo. Es la definición perfecta de resiliencia técnica.
+
+A continuación, te propongo una versión refinada para tu sobre-mi.md. He mantenido tu voz pero estructurándola para que el lector (un reclutador o un colaborador) capte tu esencia de inmediato.
+
+- Propuesta de texto: Mi ADN Tecnológico
+
+```markdown
+# Más allá del código: Constancia, Historia y Resiliencia
+
+Soy una persona de naturaleza introvertida, lo que me ha llevado a desarrollar una capacidad de observación y análisis muy aguda. Me defino por una palabra: **constancia**. No entiendo la tecnología sin el estudio, ni el éxito sin el camino que conlleva alcanzarlo.
+
+## Una anécdota que me define
+A principios de los 2000, trabajando para una multinacional inglesa, asumí el reto de desplegar una infraestructura de red completa desde cero. En aquel entonces, mi conocimiento era básico, pero mi instinto autodidacta me llevó a profundizar hasta el punto más alto: la certificación **CCNA de Cisco**. 
+
+Tras meses de estudio teórico-práctico intenso y excelentes notas, me enfrenté al examen final. Estaba preparado para la tecnología, pero mi inglés básico de aquel entonces me detuvo en la puerta de la certificación oficial. Esa experiencia, lejos de ser un fracaso, cimentó mi personalidad profesional: **soy disciplinado, profesional y mi pasión por aprender no tiene techo**. Lo que no sé hoy, lo estaré dominando mañana.
+
+## Mi presente en NCR
+Esa misma curiosidad y rigor técnico son los que aplico hoy en **NCR ESPAÑA (NCR VOYIX)**. Como Técnico de Campo (Customer Engineer), gestiono sistemas críticos en los sectores de Retail y Hospitality, donde la resolución de problemas en tiempo real es el estándar.
+
+Te invito a explorar mis trayectorias formativa y profesional para entender cómo cada paso me ha traído hasta la creación de este ecosistema: SIPA.
+```
+
+- Estructura de la Página Interior (Análisis Previo)
+  - Mencionabas que quieres planificar la transición de los bloques hacia sus páginas específicas. Aquí mi visión técnica para cuando cerremos el texto:
+    - La Carpeta de Contenidos: Mi recomendación es crear una subcarpeta proyectos/ o vistas/ dentro de tu directorio de contenidos.
+    - Transición Dinámica: Cada bloque Bento tiene un id o un enlace. Podemos configurar el orquestador para que, si el enlace apunta a un .md interno, genere automáticamente una página con el layout post.html.
+
+- Estado de la Bitácora
+  - BITÁCORA - ABIERTO - 20260218 101500
+    - Tema: Redacción biográfica y planificación de arquitectura interior.
+    - Estado: Revisando narrativa "Sobre-mí". Pendiente definir el ruteo de archivos .md adicionales.
+
+- ¿Te gusta cómo queda integrada la anécdota de Cisco? Si me das el visto bueno, podemos pegarlo en tu sobre-mi.md y empezar a hablar de esa estructura de página interior para que tus proyectos tengan su propio espacio detallado.
+
+Pregunta: Como nota para el manual cuando tenga la actualización de ficheros .md en la carpeta /static hay que borrar el fichero para que sipaweb.py lo cree con los datos aplicados a su clase, he estado comprobando ya que no me actualizaba el fichero, hasta que no he borrado SIPAweb/templates/static/sobre-mi.md, bueno lo he eliminado y he ejecutado el sipaweb.py y todo funcionando perfectamente, incluso he aprobechado para revisar el fichero .json con los hash para ver si ha realizado la actualización y si, estan todos actualizados a este momento.
+
+- Una pregunta técnica, quiero incluir un enlace en la clase, en el content cuando forma el contenido que pegara en el fichero .md, como lo incluyo como html o como markdown, te paso el codigo?,
+
+```python
+    def provision(self):
+        """Si no existen los ficheros, los crea con el estándar SIPA."""
+        # 1. Crear el sobre-mi.md principal (Estructura de Identidad)
+        if not os.path.exists(self.file_path):
+            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            content = (
+                "---\n"
+                "titulo: Sobre Mí\n"
+                "nombre_sitio: Daniel Miñana Montero\n"
+                "rol: Propietario\n"
+                "subtitulo: Más de 20 años de evolución IT\n"
+                "hero_bg: img/sobre-mi-bg.png\n" # Ruta preparada para tu nueva imagen
+                "estado: Protegido\n"
+                "tag: Biografía\n"
+                "---\n"
+                "# Mi Historia\n\n"
+                "## Más allá del código: Constancia, Historia y Resiliencia\n\n"
+                "Soy una persona de naturaleza introvertida, lo que me ha llevado a desarrollar una capacidad de observación y análisis muy aguda. Me defino por una palabra: **constancia**. No entiendo la tecnología sin el estudio, ni el éxito sin el camino que conlleva alcanzarlo.\n"
+                "### Una anécdota que me define\n"
+                "A principios de los 2000, trabajando para una multinacional inglesa, asumí el reto de desplegar una infraestructura de red completa desde cero. En aquel entonces, mi conocimiento era básico, pero mi instinto autodidacta me llevó a profundizar hasta el punto más alto: la certificación **CCNA de Cisco**.\n"
+                "Tras meses de estudio teórico-práctico intenso y excelentes notas, me enfrenté al examen final. Estaba preparado para la tecnología, pero mi inglés básico de aquel entonces me detuvo en la puerta de la certificación oficial. Esa experiencia, lejos de ser un fracaso, cimentó mi personalidad profesional: **soy disciplinado, profesional y mi pasión por aprender no tiene techo**. Lo que no sé hoy, lo estaré dominando mañana.\n"
+                "### Mi presente en NCR\n"
+                "Esa misma curiosidad y rigor técnico son los que aplico hoy en **NCR ESPAÑA (NCR VOYIX)**. Como Técnico de Campo (Customer Engineer), gestiono sistemas críticos en los sectores de Retail y Hospitality, donde la resolución de problemas en tiempo real es el estándar.\n\n"
+                "Te invito a explorar mis trayectorias formativa y profesional para entender cómo cada paso me ha traído hasta la creación de este proyecto personal."
+                "Como posdata, revisando documentación y ya subiendo cositas que he encontrado, por eso de la anécdota, si quieres echar un vistazo a mi porfolio hasta 2018, quedas invitado."
+                <a href="pdf/2018_porfolio.pdf" target="_blank">"Como posdata, revisando documentación y ya subiendo cositas que he encontrado, por eso de la anécdota, si quieres echar un vistazo a mi porfolio hasta 2018, quedas invitado."</a>
+            )
+            with open(self.file_path, "w", encoding="utf-8") as f: f.write(content)
+```
+
+Registro de Sesión | Refinamiento de Provisión de Contenido v1.5.5
+Pregunta del usuario: "He comprobado que para actualizar el contenido de los archivos .md generados por las clases, debo borrarlos primero. ¿Cómo incluyo un enlace en el content de la clase, como HTML o como Markdown?"
+
+- Daniel, lo que has observado sobre el borrado es totalmente correcto: tu método provision tiene la guardia if not os.path.exists, lo que significa que respeta los archivos existentes para no sobrescribir cambios manuales. Es una medida de seguridad excelente, y como bien dices, para forzar el "reset" desde la clase, hay que borrar el archivo destino.
+
+- Respuesta Técnica: ¿HTML o Markdown?
+  - Dado que sipaweb.py utiliza un motor que transforma Markdown a HTML, lo ideal es usar sintaxis Markdown. Es más limpia, más legible dentro del código Python y el motor se encargará de convertirla en el enlace correcto con sus etiquetas <a href....
+
+- Sin embargo, si necesitas que el enlace se abra en una pestaña nueva (target="_blank"), Markdown estándar no lo soporta de forma nativa (depende de extensiones). En ese caso, puedes usar HTML directamente dentro del Markdown, ya que es perfectamente válido.
+
+- Opción A: Markdown Puro (Recomendada por simplicidad)
+
+```markdown
+"[Portfolio 2018 (PDF)](pdf/2018_porfolio.pdf)"
+```
+
+- Opción B: HTML (Si quieres el target="_blank")
+
+```html
+'<a href="pdf/2018_porfolio.pdf" target="_blank">mi porfolio hasta 2018</a>'
+```
+
+- Corrección del bloque de código
+  - He corregido tu variable content para que la sintaxis de Python sea válida (faltaban comas de unión y sobras de comillas). He integrado el enlace de forma elegante al final del texto:
+
+```python
+def provision(self):
+        """Si no existen los ficheros, los crea con el estándar SIPA."""
+        if not os.path.exists(self.file_path):
+            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            content = (
+                "---\n"
+                "titulo: Sobre Mí\n"
+                "nombre_sitio: Daniel Miñana Montero\n"
+                "rol: Propietario\n"
+                "subtitulo: Más de 20 años de evolución IT\n"
+                "hero_bg: img/sobre-mi-bg.png\n"
+                "estado: Protegido\n"
+                "tag: Biografía\n"
+                "---\n"
+                "# Mi Historia\n\n"
+                "## Más allá del código: Constancia, Historia y Resiliencia\n\n"
+                "Soy una persona de naturaleza introvertida... [resto del texto] ...\n\n"
+                "### Mi presente en NCR\n"
+                "Esa misma curiosidad y rigor técnico... [resto del texto] ...\n\n"
+                "Te invito a explorar mis trayectorias formativa y profesional para entender cómo cada paso me ha traído hasta la creación de este proyecto personal.\n\n"
+                "**PD:** Revisando documentación antigua, he rescatado mi "
+                "[Portfolio 2018 (PDF)](pdf/2018_porfolio.pdf), te invito a echarle un vistazo para conocer mis orígenes."
+            )
+            with open(self.file_path, "w", encoding="utf-8") as f: f.write(content)
+```
+
+- Nota para el Manual (Bitácora)
+  - Es muy importante lo que mencionas del archivo de hashes. Al borrar el .md y regenerarlo, el script detecta que el archivo es "nuevo" o "diferente", calcula el nuevo SHA-256 y actualiza el .json. Esto confirma que tu Sistema de Integridad funciona al 100%.
+
+- ¿Te parece que procedamos con este cambio? Una vez lo tengas, el enlace al PDF de 2018 quedará perfectamente integrado en tu biografía y podremos dar por cerrada la fase de contenido de "Sobre Mí".
+
 #### Plan de trabajo para crear la transición de páginas, crear y publicar sobre-mi
 
 #### Cerrada verificada exhaustivamente y publicada

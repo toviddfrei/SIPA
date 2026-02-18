@@ -2,26 +2,26 @@
     "index": {
         "file_hash": "aaa909d5567b0e9978788a921627b3f1f2f783b0804f63ea96501fe45d52bd1a",
         "dir_hash": "d92b719bd33187bd01af8c82efc54713e8387c01ae4006e72b2bf66ae562921c",
-        "last": "2026-02-17T21:05:16.350966"
+        "last": "2026-02-18T11:16:47.527711"
     },
     "sobre-mi": {
-        "file_hash": "335641d2b7b80a6f26cd80ebc0be82b66ce7a4d7dd3185fd1b752c8f69f4a824",
+        "file_hash": "d2aacacf7bcba0504bf29ccdebd7efc71e72172c122c306066e8f281525c4e16",
         "dir_hash": "f64d8509878745fa961771b46c2dcea81f89bf7b5e414b56f09d4bfeb30582e9",
-        "last": "2026-02-17T21:05:16.353088"
+        "last": "2026-02-18T11:16:47.530650"
     },
     "proyectos": {
         "file_hash": "f8bc4ed9e077e4bc2423720d8eb5fca6eb524b066a611e1ad3d79702e2ec8fe7",
         "dir_hash": "4b4ba0f9f313042b7935190795355aefb03e8a17b3c5c3a02cbb1ae08e8557fa",
-        "last": "2026-02-17T21:05:16.355225"
+        "last": "2026-02-18T11:16:47.532340"
     },
     "contacto": {
         "file_hash": "ceb2b928e1931c5ebe9ac3fcdeaba64b709c0252055a793c93da423475bbeb73",
         "dir_hash": "a69fcbe2df18970741f9f779fe47adcc0b45367e4293c01dc7231e15a7656f25",
-        "last": "2026-02-17T21:05:16.356371"
+        "last": "2026-02-18T11:16:47.533263"
     },
     "ayuda": {
         "file_hash": "08e3dbcff117769b37ee1a418156e537d07558738d35ce15b1e17b6edfbb9a82",
         "dir_hash": "023b983f7e259a8cdf4e8db7c4a8010af591947b95e214b1e67f7b8274a7a3be",
-        "last": "2026-02-17T21:05:16.357486"
+        "last": "2026-02-18T11:16:47.534151"
     }
 }

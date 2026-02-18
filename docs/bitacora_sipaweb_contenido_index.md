@@ -16,7 +16,7 @@ Observas el código, y empiezas a ver que has hecho ahora que no se te ocurrio a
 
 ### CONTENIDO index.md
 
-### BITÁCORA - ABIERTO - 20260216 105355
+### BITÁCORA - CERRADA - 20260216 105355
 
 #### Tema tratado : Modificación contenido index.md, personalizarlo más a mi, menos a la marca, presentarme yo
 
@@ -473,4 +473,27 @@ Pregunta: He realizado algunos ajustes, para el favicon.ico y el logo, ya están
 - He realizado la prueba final eliminado todos los html que se crean, eliminando base.html y custom.css, y ha funcionado perfectamente, ha generado todas las páginas ya recogen el favicon.ico y el logo, ha cambiado al azul seleccionado y realmente me gusta.
 - Voy a crear el commit, actualizo la versión a 1.4.3 Incluir logo y favicon
 
-#### Cerrada revisada exhaustivamente y publicada
+- <https://danielminanamontero.github.io/SIPAweb/>
+
+Registro de Sesión | Hito Visual Alcanzado v1.4.3
+Pregunta del usuario: "He realizado los ajustes, el favicon y el logo ya funcionan. He probado el borrado total y la reconstrucción es perfecta. Cambio a azul y publico versión 1.4.3."
+
+¡Enhorabuena, Daniel! Ese es el momento "Eureka" de todo desarrollador: cuando borras la carpeta de salida, ejecutas tu script y ves cómo SIPAweb reconstruye un sitio completo, coherente y con identidad propia en segundos. El paso al Azul ADN y la integración del logo marcan el fin de la etapa de infraestructura.
+
+- Estado de la Publicación v1.4.3
+  - Integridad: Prueba de "Tierra Quemada" superada. El orquestador sipaweb.py es ahora un motor de despliegue fiable.
+  - Identidad: Logo y Favicon sincronizados mediante asegurar_activos_core.
+  - Estética: Transición de Verde a Azul completada en custom.css, alineándose con la paleta tecnológica de tu nuevo logo.
+  - URL Activa: El sitio ya es una realidad en GitHub Pages.
+
+- Próximos Pasos: "Operación Sobre-Mí"
+  - Mañana, con los cimientos de hormigón armado, entraremos en el contenido denso. Aprovecharemos toda la información de tu Portfolio 2018 y tu CV 2025 para:
+  - Bloque Trayectoria: Tabular tu paso por NCR y tus años como autónomo.
+  - Bloque Formación: Detallar los hitos de Bottega University y Google.
+  - Narrativa: Ajustar ese texto "humano" que revisamos hoy para que conecte emocionalmente con quien te visite.
+
+- ¿Te parece que mañana empecemos directamente volcando la tabla de experiencia profesional en el bloque correspondiente?
+
+- Descansa, Daniel. Has hecho un trabajo de ingeniería estructural impecable hoy. ¡Nos vemos mañana para rematar el contenido!
+
+#### Cerrada 17/02/2026 21:24:41
