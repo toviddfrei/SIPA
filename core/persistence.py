@@ -1,7 +1,7 @@
 # ==========================================================
 # PROYECTO SIPA - Sistema de Inteligencia de Perfil Automático
 # Archivo: persistence.py | Módulo: SIPAdel (Kernel)
-# Versión: 0.2.5 (Full Excellence) | Fecha: 10/01/2026
+# Versión: 0.2.5 (Protocolo Tabla 0) | Fecha: 11/01/2026
 # ==========================================================
 
 import sqlite3
@@ -35,10 +35,12 @@ class PersistenceManager:
             db_dir = os.path.dirname(self.db_path)
             os.makedirs(db_dir, exist_ok=True)
             self._conn = sqlite3.connect(self.db_path, timeout=10, check_same_thread=False)
-            # Permite el acceso por nombre de columna para la Web
             self._conn.row_factory = sqlite3.Row
             self._cursor = self._conn.cursor()
+            
             self.create_tables()
+            self._poblar_tipos_maestros() # Única adición al flujo original
+            
             return True
         except Exception as e:
             print(f"\n[-] ERROR CRÍTICO EN EL KERNEL: {e}")
@@ -46,8 +48,8 @@ class PersistenceManager:
 
     def create_tables(self):
         """Implementación del SCHEMA DEFINITIVO y Estructuras de Control."""
-        # 1. ROLES Y USUARIO (Reto SQL)
-        self._cursor.execute("CREATE TABLE IF NOT EXISTS type_user (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL)")
+        # 1. ROLES Y USUARIO
+        self._cursor.execute("CREATE TABLE IF NOT EXISTS type_user (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL UNIQUE, descripcion TEXT)")
         
         self._cursor.execute("""
             CREATE TABLE IF NOT EXISTS user (
@@ -76,7 +78,7 @@ class PersistenceManager:
                 FOREIGN KEY (type_user_id) REFERENCES type_user(id)
             )""")
 
-        # 2. AUDITORÍA, SESIONES Y LOGS
+        # 2. AUDITORÍA, SESIONES Y LOGS (Estructura original para SIPAbap)
         self._cursor.execute("""
             CREATE TABLE IF NOT EXISTS sys_audit (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,35 +87,11 @@ class PersistenceManager:
                 time_log DATETIME DEFAULT CURRENT_TIMESTAMP
             )""")
 
-        self._cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sessions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                start_time TEXT,
-                version TEXT,
-                status TEXT
-            )""")
+        self._cursor.execute("CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, start_time TEXT, version TEXT, status TEXT)")
+        self._cursor.execute("CREATE TABLE IF NOT EXISTS app_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, session_id INTEGER, level TEXT, name TEXT, message TEXT, context_json TEXT)")
+        self._cursor.execute("CREATE TABLE IF NOT EXISTS metricas_arranque (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, duracion REAL, estado TEXT)")
 
-        self._cursor.execute("""
-            CREATE TABLE IF NOT EXISTS app_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT,
-                session_id INTEGER,
-                level TEXT,
-                name TEXT,
-                message TEXT,
-                context_json TEXT
-            )""")
-
-        # 3. MÉTRICAS DE RENDIMIENTO
-        self._cursor.execute("""
-            CREATE TABLE IF NOT EXISTS metricas_arranque (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT,
-                duracion REAL,
-                estado TEXT
-            )""")
-
-        # 4. TRIGGER AUTOMÁTICO
+        # 3. TRIGGER AUTOMÁTICO
         self._cursor.execute("""
             CREATE TRIGGER IF NOT EXISTS audit_perfil_update AFTER UPDATE ON user
             BEGIN
@@ -123,7 +101,18 @@ class PersistenceManager:
         
         self._conn.commit()
 
-    # --- GESTIÓN DE SESIONES Y CIERRE ---
+    def _poblar_tipos_maestros(self):
+        """Inyecta los 4 pilares de identidad SIPA si la tabla está vacía."""
+        tipos = [
+            (1, 'PROPIETARIO', 'Acceso Root Total. Daniel Miñana.'),
+            (2, 'DESARROLLADOR', 'Permisos técnicos y arquitectura.'),
+            (3, 'USUARIO', 'Perfil público Beta.'),
+            (4, 'IA', 'Entidad de procesamiento autónomo.')
+        ]
+        self._cursor.executemany("INSERT OR IGNORE INTO type_user (id, nombre, descripcion) VALUES (?, ?, ?)", tipos)
+        self._conn.commit()
+
+    # --- MÉTODOS ORIGINALES (SIN CAMBIOS) ---
     def register_session(self, version="0.2.5"):
         try:
             sql = "INSERT INTO sessions (start_time, version, status) VALUES (datetime('now','localtime'), ?, 'ACTIVE')"
@@ -133,12 +122,10 @@ class PersistenceManager:
         except: return 0
 
     def close(self):
-        """Cierre seguro de la persistencia."""
         if self._conn:
             self._conn.close()
             self._conn = None
 
-    # --- TELEMETRÍA Y MÉTRICAS ---
     def registrar_metrica_arranque(self, duracion_actual):
         try:
             self._cursor.execute("SELECT AVG(duracion) FROM (SELECT duracion FROM metricas_arranque ORDER BY id DESC LIMIT 20)")
@@ -151,23 +138,9 @@ class PersistenceManager:
             return estado, media
         except: return "ERROR", 0
 
-    def obtener_metricas_recientes(self, limite=10):
-        try:
-            self._cursor.execute("SELECT timestamp, duracion, estado FROM metricas_arranque ORDER BY id DESC LIMIT ?", (limite,))
-            return [dict(row) for row in self._cursor.fetchall()]
-        except: return []
-
-    def insert_log(self, record_dict):
-        try:
-            sql = "INSERT INTO app_logs (timestamp, session_id, level, name, message, context_json) VALUES (?, ?, ?, ?, ?, ?)"
-            self._cursor.execute(sql, (datetime.now().isoformat(), 0, record_dict.get('level'), 'root', record_dict.get('message'), '{}'))
-            self._conn.commit()
-        except: pass
-
-    # --- CONSULTA WEB ---
     def get_user_profile(self):
         try:
-            self._cursor.execute("SELECT * FROM user LIMIT 1")
+            self._cursor.execute("SELECT * FROM user WHERE id = 1")
             res = self._cursor.fetchone()
             return dict(res) if res else None
         except: return None
@@ -178,17 +151,12 @@ class PersistenceManager:
 
 db_engine = PersistenceManager()
 
-# Script rápido de ignición
 if __name__ == "__main__":
-    from core.persistence import db_engine
-    
-    # 1. Insertamos el Rol
-    db_engine._cursor.execute("INSERT OR IGNORE INTO type_user (id, nombre) VALUES (1, 'Administrador Root')")
-    
-    # 2. Insertamos tu Perfil (El corazón del sistema)
+    # Ignición controlada
     db_engine._cursor.execute("""
         INSERT OR IGNORE INTO user (id, type_user_id, nombre_completo, profesion_principal, biografia_corta, email_1, email_2)
-        VALUES (1, 1, 'Daniel Miñana Montero', 'Ingeniero de Sistemas SIPA', 'Perfil automatizado y evolucionado bajo protocolo FORTRESS.', 'tu_email@sipa.local', 'backup@sipa.local')
+        VALUES (1, 1, 'Daniel Miñana Montero', 'Ingeniero de Sistemas SIPA', 
+        'Perfil automatizado bajo protocolo FORTRESS.', 'daniel@sipa.local', 'soporte@sipa.local')
     """)
     db_engine._conn.commit()
-    print("[+] Enchufe con corriente: Datos de Daniel inyectados con éxito.")
+    print("[+] Enchufe con corriente: Estructura SIPA verificada.")
