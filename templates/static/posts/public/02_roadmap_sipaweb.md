@@ -80,7 +80,7 @@ Hito 2 A : Confeccionar página a página
 - [x] Enlace de todas con todas, a través de una barra navegación fija
 - [x] Enlace de los proyectos en el pie según perfil tovid o mimod
 - [x] Diseño estructura, acciones, contenido de sobre-mi.html
-- [ ] Diseño estructura, acciones, contenido de proyectos.html
+- [x] Diseño estructura, acciones, contenido de proyectos.html
 - [ ] Diseño estructura, acciones, contenido de contacto.html
 - [ ] Diseño estructura, acciones, contenido de ayuda.html
 
@@ -103,3 +103,9 @@ Hito 4: Módulo de análisis de mercado e inyección de contenido IA.
 
 - [] Planificar la integración de SIPAweb versión 1.0 en SIPA_PROJECT
 - [] Crear cronograma ejecución aproximada 3 meses a partir de Abril 2026 flexible
+
+### PLANIFICACIÓN VERSIONES SIGUIENTES
+
+- [] Formulario contacto a la inversa
+- [] Refactorización css
+- [] Adaptación formatter markdown genérico

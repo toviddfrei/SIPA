@@ -236,7 +236,7 @@ class SipaFileContacto(SipaModule):
                 "nombre_sitio: SIPAweb\n"
                 "rol: Trayectoria Profesional\n"
                 "subtitulo: Más de 20 años de evolución IT\n"
-                "hero_bg: img/Contacto-bg.png\n" # Ruta preparada para tu nueva imagen
+                "hero_bg: img/contacto-bg.png\n" # Ruta preparada para tu nueva imagen
                 "estado: Protegido\n"
                 "tag: Contacto\n"
                 "---\n"
@@ -575,6 +575,7 @@ class SipaWebBuilder:
             ("img", "favicon.ico", os.path.join(self.raiz, "img")), # Nuevo: Favicon
             ("img", "danielminanamontero-logo.png", os.path.join(self.raiz, "img")), # Nuevo: Tu logo azul
             ("img", "proyectos-bg.png", os.path.join(self.raiz, "img")),
+            ("img", "contacto-bg.png", os.path.join(self.raiz, "img")),
             ("pdf", "2018_porfolio.pdf", os.path.join(self.raiz, "pdf"))
         ]
         
