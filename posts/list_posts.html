@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPAweb</title>
+    
+    <link rel="icon" type="image/x-icon" href="../img/favicon.ico">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="../css/custom.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <header class="header-minimal" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../img/avatargithub.png'); background-size: cover; background-position: center;">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 100%; padding: 0 var(--spacing); width: 100%;">
+            
+            <a href="../index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                <img src="../img/danielminanamontero-logo.png" alt="Logo" style="height: 45px; width: auto;">
+                <span style="color: white;font-weight: 700;font-size: 1.4rem;letter-spacing: 0.5px;height: auto;width: 500px;">Daniel Miñana Montero</span>
+            </a>
+
+            <nav style="margin: 0; padding: 0;">
+                <ul style="display: flex; gap: 2rem; margin: 0; list-style: none;">
+                    <li><a href="../index.html"><i class="ph ph-house" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../sobre-mi.html"><i class="ph ph-user" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../proyectos.html"><i class="ph ph-briefcase" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../contacto.html"><i class="ph ph-envelope" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../ayuda.html"><i class="ph ph-question" style="color: white; font-size: 1.4rem;"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container-fluid doc-layout">
+        <div class="grid-document">
+            <aside class="sidebar-meta">
+                <section class="file-data">
+                    <span class="badge">ÍNDICE GLOBAL</span>
+                    <p><small>Registros totales: 9</small></p>
+                    <hr>
+                </section>
+
+                <nav class="toc-menu">
+                    <h6>Cronología</h6>
+                    <ul style="list-style: none; padding: 0;">
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-1" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">10/02/2026</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    Técnico de campo IT </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-2" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">03/02/2026</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    Plan de trabajo SIPAweb </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-3" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">03/02/2026</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    Creación SIPAweb </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-4" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">01/11/2025</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    El origen del proyecto SIPA </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-5" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">09/09/2003</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    Conductor vehículos < 3500 kg </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-6" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">05/12/1988</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    Auxiliar administrativo </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-7" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">01/09/1988</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    FP1 2 Administración </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-8" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">01/09/1986</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    FP1 1 Administración </span>
+                            </a>
+                        </li>
+                        
+                        <li style="margin-bottom: 1rem; border-left: 2px solid #444; padding-left: 10px;">
+                            <a href="#post-9" class="secondary" style="text-decoration: none; display: block;">
+                                <small style="color: var(--primary);">03/03/1972</small><br>
+                                <span style="font-size: 0.85rem; line-height: 1.2; display: block;">
+                                    EGB-graduado escolar </span>
+                            </a>
+                        </li>
+                        
+                    </ul>
+                </nav>
+            </aside>
+
+            <article class="content-body">
+                <h1>Índice de Actividad</h1> 
+                <hr>
+                
+                
+                <section id="post-1" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">laboral</span>
+                            <h2 style="margin: 0;">Técnico de campo IT</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">10/02/2026</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="laboral/99_experiencia_laboral.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-2" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">post</span>
+                            <h2 style="margin: 0;">Plan de trabajo SIPAweb</h2>
+                            <p style="color: var(--secondary);">Cronograma proyecto SIPAweb</p>
+                        </div>
+                        <small class="date-tag">03/02/2026</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#python</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#arquitectura</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#web</kbd>
+                            
+                        
+                    </div>
+
+                    <footer>
+                        <a href="02_roadmap_sipaweb.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-3" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">post</span>
+                            <h2 style="margin: 0;">Creación SIPAweb</h2>
+                            <p style="color: var(--secondary);">Acta fundación herramienta SIPAweb automatización creación web perfil profesional</p>
+                        </div>
+                        <small class="date-tag">03/02/2026</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#python</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#arquitectura</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#web</kbd>
+                            
+                        
+                    </div>
+
+                    <footer>
+                        <a href="01_acta_fundacion_sipaweb.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-4" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">post</span>
+                            <h2 style="margin: 0;">El origen del proyecto SIPA</h2>
+                            <p style="color: var(--secondary);">Razonamiento de la creación de SIPA como mi proyecto base</p>
+                        </div>
+                        <small class="date-tag">01/11/2025</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#Arquitectura</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#Dirección</kbd>
+                            
+                            <kbd style="font-size: 0.7rem; background: #2d333b;">#Gestión</kbd>
+                            
+                        
+                    </div>
+
+                    <footer>
+                        <a href="03_el_origen_del_proyecto_sipa.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-5" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">laboral</span>
+                            <h2 style="margin: 0;">Conductor vehículos < 3500 kg</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">09/09/2003</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="laboral/02_experiencia_laboral.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-6" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">laboral</span>
+                            <h2 style="margin: 0;">Auxiliar administrativo</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">05/12/1988</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="laboral/01_experiencia_laboral.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-7" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">formativa</span>
+                            <h2 style="margin: 0;">FP1 2 Administración</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">01/09/1988</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="formativa/03_experiencia_formativa.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-8" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">formativa</span>
+                            <h2 style="margin: 0;">FP1 1 Administración</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">01/09/1986</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="formativa/02_experiencia_formativa.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+                <section id="post-9" class="ficha-tecnica-card" style="margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #333;">
+                    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="badge" style="background-color: var(--primary); margin-bottom: 0.5rem;">formativa</span>
+                            <h2 style="margin: 0;">EGB-graduado escolar</h2>
+                            <p style="color: var(--secondary);"></p>
+                        </div>
+                        <small class="date-tag">03/03/1972</small>
+                    </header>
+
+                    <div class="tags-row" style="margin: 1rem 0;">
+                        
+                    </div>
+
+                    <footer>
+                        <a href="formativa/01_experiencia_formativa.html" role="button" class="outline">
+                            <i class="ph ph-eye"></i> Leer Documento
+                        </a>
+                    </footer>
+                </section>
+                
+            </article>
+        </div>
+    </main>
+
+    <footer class="footer-sipa">
+        <div class="container">
+            <div class="grid">
+                <div class="footer-col">
+                    <p><strong>Daniel Miñana Montero</strong><br>
+                    <small>by SIPAweb 2026</small></p>
+                    <a href="#top" class="nav-link-subir"><i class="ph ph-caret-double-up"></i> Inicio</a>
+                </div>
+                
+                <div class="footer-col">
+                    <h6>Conectar</h6>
+                    <ul class="footer-links">
+                        <li><a href="https://linkedin.com/in/danielminanamontero" target="_blank">LinkedIn</a></li>
+                        <li><a href="https://github.com/danielminanamontero" target="_blank">GitHub (Mimod Bland)</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h6>Recursos</h6>
+                    <a href="#" class="btn-cv-azul">
+                        <i class="ph ph-file-pdf"></i> Currículum
+                    </a>
+                </div>
+
+                <div class="footer-col">
+                    <h6>Radar Ciber</h6>
+                    <ul class="footer-links">
+                        <li><a href="https://www.incibe.es" target="_blank">Incibe</a></li>
+                        <li><a href="#">Seguridad IT</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
