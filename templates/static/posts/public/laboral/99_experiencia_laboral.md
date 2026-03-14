@@ -12,7 +12,7 @@ tags: soporte técnico, hardware, software, redes, industrial, hospitality, reta
 # Detalles experiencia
 
 - **Sector** : Tecnologías de la información (Comercio al por mayor y menor de equipos informáticos y soluciones de software)
-- **Fecha inicio** : 10/02/2026
+- **Fecha inicio** : 10/02/2025
 - **Fecha fin** : actual
 - **Duración en meses** : > 12 meses
 - **Categoría del puesto** : Técnico de campo IT
