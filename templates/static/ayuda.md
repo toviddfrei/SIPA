@@ -16,7 +16,7 @@ SIPAweb está diseñado para ser intuitivo, pero sabemos que la potencia de la a
 
 Si quieres aprender a crear contenido, gestionar tus trayectorias o entender cómo funciona el motor de renderizado, consulta nuestro manual interactivo.
 
-- [Ir al Manual de Usuario](./docs/index.html) *(Este enlace apunta al build de MkDocs)*
+- [Ir al Manual de Usuario](docs_tecnicos/index.html) *(Este enlace apunta al build de MkDocs)*
 
 ### Guías rápidas
 
@@ -26,7 +26,7 @@ Si quieres aprender a crear contenido, gestionar tus trayectorias o entender có
 
 Para profundizar en las tripas del sistema: clases Python, funciones de `SipaFilePost` y el orquestador `SipaWebBuilder`. Generado automáticamente mediante Docstrings.
 
-- [Explorar Referencia Técnica](./docs/api-reference.html)
+- [Explorar Referencia Técnica](docs_tecnicos/referencia/index.html)
 
 ## 🖋️ El Lenguaje del Sitio: Markdown
 

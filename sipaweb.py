@@ -12,6 +12,7 @@ import hashlib
 import json
 import shutil
 import unicodedata
+import subprocess
 from datetime import datetime
 
 class SipaModule:
@@ -570,6 +571,9 @@ class SipaWebBuilder:
             ("", "post.html", self.templates),
             ("", "time.html", self.templates),
             ("", "custom.css", os.path.join(self.raiz, "css")),
+            ("mkdocs/docs", "index.md", os.path.join(self.raiz, "docs")),
+            ("mkdocs/docs", "referencia.md", os.path.join(self.raiz, "docs")),
+            ("mkdocs", "mkdocs.yml", self.raiz), # El config suele ir en la raíz del proyecto
             ("img", "avatargithub.png", os.path.join(self.raiz, "img")),
             ("img", "sobre-mi-bg.png", os.path.join(self.raiz, "img")),
             ("img", "favicon.ico", os.path.join(self.raiz, "img")), # Nuevo: Favicon
@@ -609,6 +613,34 @@ class SipaWebBuilder:
                 return metadatos, partes[2].strip()
             return {}, contenido
         except: return {}, ""
+
+    def ejecutar_mkdocs(self):
+        """
+        Lanza la construcción de la documentación técnica mediante MkDocs.
+        Asegura que el directorio de salida exista y el comando se ejecute.
+        """
+        import subprocess
+        print(f"\n[*] Iniciando construcción de Documentación Técnica (MkDocs)...")
+        
+        # 1. Definimos la ruta de salida (dentro de tu raíz para que GitHub Pages lo vea)
+        # Puedes llamarlo 'docs_tecnicos' para no confundir con tu carpeta de origen 'docs'
+        output_docs = os.path.join(self.raiz, "docs")
+        
+        try:
+            # Ejecutamos: mkdocs build --clean -d [ruta_destino]
+            # --clean asegura que no queden restos de builds anteriores
+            resultado = subprocess.run(
+                ["mkdocs", "build", "--clean", "-d", output_docs],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print(f"[!] MkDocs: Documentación actualizada en {output_docs}")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"[X] ERROR al ejecutar MkDocs: {e.stderr}")
+        except FileNotFoundError:
+            print(f"[X] ERROR: MkDocs no está instalado o no se encuentra en el PATH.")
 
     def build(self):
         """Ciclo de construcción v1.5: Generación Multitarea (Primary Pages)."""
@@ -665,7 +697,34 @@ class SipaWebBuilder:
         post_mgr = SipaFilePost("posts", self.static, self)
         post_mgr.ejecutar_ciclo_editorial()
 
+        # MISIÓN KERNEL: Documentación Técnica (MkDocs)
+        # Se ejecuta al final para asegurar que el código (sipaweb.py) 
+        # esté listo para ser leído por mkdocstrings.
+        self.disparar_mision_mkdocs()
+
         print(f"\n--- Construcción Global v1.5 Finalizada ---")
+
+    def disparar_mision_mkdocs(self):
+                """Disparador controlado del motor MkDocs."""
+                print(f"\n[*] Iniciando Misión Kernel: MkDocs")
+                
+                # Verificamos que el archivo de configuración exista antes de disparar
+                config_path = os.path.join(self.raiz, "mkdocs.yml")
+                if not os.path.exists(config_path):
+                    print(f"[X] ABORTADO: No se encuentra mkdocs.yml en la raíz.")
+                    return
+
+                try:
+                    # Ejecución silenciosa capturando errores
+                    subprocess.run(
+                        ["mkdocs", "build", "--clean"], 
+                        check=True, 
+                        capture_output=True, 
+                        text=True
+                    )
+                    print(f"[!] KERNEL: Documentación técnica sincronizada.")
+                except Exception as e:
+                    print(f"[X] ERROR en Misión MkDocs: {e}")
 
 if __name__ == "__main__":
     SipaWebBuilder().build()
