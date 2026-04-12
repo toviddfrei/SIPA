@@ -1,0 +1,53 @@
+{
+    "filename": "audit_report_20260107_101448.md",
+    "forensics": {
+        "permissions": "664",
+        "is_readable": true,
+        "size_bytes": 591,
+        "hash_sha256": "035f0d6089479035b63b035e6f05672157222527f25ab6b565ea12061ee3f250"
+    },
+    "top_keywords": [
+        {
+            "word": "auditor\u00eda",
+            "count": 2
+        },
+        {
+            "word": "sistema",
+            "count": 2
+        },
+        {
+            "word": "ruta",
+            "count": 2
+        },
+        {
+            "word": "toviddfrei",
+            "count": 2
+        },
+        {
+            "word": "informe",
+            "count": 1
+        },
+        {
+            "word": "cyberaudit",
+            "count": 1
+        },
+        {
+            "word": "fecha",
+            "count": 1
+        },
+        {
+            "word": "2026",
+            "count": 1
+        },
+        {
+            "word": "estado",
+            "count": 1
+        },
+        {
+            "word": "seguro",
+            "count": 1
+        }
+    ],
+    "sinergias": [],
+    "updated": "2026-03-21 16:57"
+}

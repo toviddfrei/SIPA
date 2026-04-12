@@ -1,0 +1,53 @@
+{
+    "filename": "AUDIT_20260107_135448.md",
+    "forensics": {
+        "permissions": "664",
+        "is_readable": true,
+        "size_bytes": 391,
+        "hash_sha256": "ea77e5d77a9e6ec80780c9a993a5e44b5d40f988ace2983ce79461e01e502f62"
+    },
+    "top_keywords": [
+        {
+            "word": "hash",
+            "count": 2
+        },
+        {
+            "word": "ficha",
+            "count": 1
+        },
+        {
+            "word": "t\u00e9cnica",
+            "count": 1
+        },
+        {
+            "word": "auditor\u00eda",
+            "count": 1
+        },
+        {
+            "word": "sipa",
+            "count": 1
+        },
+        {
+            "word": "archivo",
+            "count": 1
+        },
+        {
+            "word": "main",
+            "count": 1
+        },
+        {
+            "word": "cddbf84d172ae156e70eec9f37dcbaa438b2b03377069f0693ec13814aaf3afa",
+            "count": 1
+        },
+        {
+            "word": "estado",
+            "count": 1
+        },
+        {
+            "word": "nuevo_anclaje",
+            "count": 1
+        }
+    ],
+    "sinergias": [],
+    "updated": "2026-03-21 16:57"
+}

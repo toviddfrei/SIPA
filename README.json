@@ -1,0 +1,53 @@
+{
+    "filename": "README.md",
+    "forensics": {
+        "permissions": "664",
+        "is_readable": true,
+        "size_bytes": 3250,
+        "hash_sha256": "403dbafda44d7a9c95213d6b855267dabff8949b4db077e4755d7c0390610af7"
+    },
+    "top_keywords": [
+        {
+            "word": "sipa",
+            "count": 9
+        },
+        {
+            "word": "seguridad",
+            "count": 6
+        },
+        {
+            "word": "sistema",
+            "count": 5
+        },
+        {
+            "word": "identidad",
+            "count": 4
+        },
+        {
+            "word": "fase",
+            "count": 4
+        },
+        {
+            "word": "b\u00fanker",
+            "count": 3
+        },
+        {
+            "word": "bapp",
+            "count": 3
+        },
+        {
+            "word": "cyberaudit",
+            "count": 3
+        },
+        {
+            "word": "integridad",
+            "count": 3
+        },
+        {
+            "word": "memoria",
+            "count": 3
+        }
+    ],
+    "sinergias": [],
+    "updated": "2026-03-21 16:57"
+}

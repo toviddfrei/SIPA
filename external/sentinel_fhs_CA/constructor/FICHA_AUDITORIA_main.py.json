@@ -1,0 +1,53 @@
+{
+    "filename": "FICHA_AUDITORIA_main.py.md",
+    "forensics": {
+        "permissions": "664",
+        "is_readable": true,
+        "size_bytes": 515,
+        "hash_sha256": "d91ba035e1852309cf44c27f8f324592f40b9bae54fbace544a746c8aec6508e"
+    },
+    "top_keywords": [
+        {
+            "word": "seguridad",
+            "count": 2
+        },
+        {
+            "word": "main",
+            "count": 2
+        },
+        {
+            "word": "2026",
+            "count": 2
+        },
+        {
+            "word": "07t07",
+            "count": 2
+        },
+        {
+            "word": "216150",
+            "count": 2
+        },
+        {
+            "word": "ficha",
+            "count": 1
+        },
+        {
+            "word": "forense",
+            "count": 1
+        },
+        {
+            "word": "identificaci\u00f3n",
+            "count": 1
+        },
+        {
+            "word": "archivo",
+            "count": 1
+        },
+        {
+            "word": "nombre",
+            "count": 1
+        }
+    ],
+    "sinergias": [],
+    "updated": "2026-03-21 16:57"
+}
