@@ -100,18 +100,21 @@ CIERRE DE VERSIÓN Y LANZAMIENTO
 
 Pendiente de retomar el SIPA_PROJECT para encajarle en su cronograma de desarrollo
 
+- [] Revisión estado desarrollo SIPA_PROJECT
+- [] Sistema de creación de .pdf curriculum para publicar en SIPAweb
+
 ### HITO 3 PLANIFICAR
 
 Hito 3: Integración del procesador de trayectoria profesional (SIPA core).
 
-- [] Planificar la integración de SIPAweb versión 1.0 en SIPA_PROJECT
+- [] Planificar la integración de SIPAweb versión 1.5 en SIPA_PROJECT
 - [] Crear cronograma ejecución aproximada 3 meses a partir de Abril 2026 flexible
 
 ### HITO 4 PLANIFICAR
 
 Hito 4: Módulo de análisis de mercado e inyección de contenido IA.
 
-- [] Planificar la integración de SIPAweb versión 1.0 en SIPA_PROJECT
+- [] Planificar la integración de SIPAweb versión 1.5 en SIPA_PROJECT
 - [] Crear cronograma ejecución aproximada 3 meses a partir de Abril 2026 flexible
 
 ### PLANIFICACIÓN VERSIONES SIGUIENTES
@@ -121,3 +124,25 @@ Hito 4: Módulo de análisis de mercado e inyección de contenido IA.
 - [] Refactorización css
 - [] Adaptación formatter markdown genérico
 - [] Barra navegación convertirla en menu en pantalla teléfono
+
+## CRONOGRAMA VISUAL
+
+```mermaid
+gantt
+    title Cierre V1.5 SIPAweb
+    dateFormat DD-MM-YYYY
+    axisFormat %d-%m
+    tickInterval 1day
+    section Tarea 1
+    Completar contenido laboral : active, a1, 17-03-2026, 13d
+    section Tarea 2
+    Completar contenido formativo : active, a2, 17-03-2026, 13d
+    section Tarea 3
+    Creación y descarga .pdf : active, a3, 19-03-2026, 5d
+    section Tarea 4
+    Botones de listados todos, laboral, formativa : active, a4, after a3, 3d
+    section Tarea 5
+    Botones e imágenes con etiquetas alt : active, a5, after a4, 1d
+    section Tarea 6
+    Iconos hover con su nombre : active, a6, after a5, 2d
+```

@@ -584,7 +584,17 @@ class SipaWebBuilder:
             ("pdf", "2018_porfolio.pdf", os.path.join(self.raiz, "pdf")),
             ("pdf", "certificado_profesionalidad.pdf", os.path.join(self.raiz, "pdf")),
             ("pdf", "certificado_servef_00.pdf", os.path.join(self.raiz, "pdf")),
-            ("pdf", "certificado_servef_01.pdf", os.path.join(self.raiz, "pdf"))
+            ("pdf", "certificado_servef_01.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "certificado_ciberseguridad_google.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-automatizar-tareas.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-conectar-y-proteger-redes.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-gestionar-los-riegos.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-fundamentos-ciberseguridad.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-herramientas-linux-sql.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-recursos-amenazas-vulnerabilidades.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-deteccion-respuesta.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-preparase-para-empleos.pdf", os.path.join(self.raiz, "pdf")),
+            ("pdf", "ciber-google-busqueda-empleo-ia.pdf", os.path.join(self.raiz, "pdf"))
         ]
         
         for subfolder, nombre, destino_folder in activos:

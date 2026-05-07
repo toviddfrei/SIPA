@@ -14,9 +14,6 @@ site/
 .vscode/
 .idea/
 
-# Desarrollos locales
-constructor/
-
 # Templates desarrollo
 templates/static/posts/process
 
