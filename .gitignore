@@ -53,3 +53,9 @@ logs/
 # --- TEMP ---
 tmp/
 temp/
+
+# --- MEGA ---
+.megaignore
+.directory
+
+.sipa_root
