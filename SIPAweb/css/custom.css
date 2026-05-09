@@ -1,0 +1,288 @@
+/**
+ * SIPAweb Design System v1.5.1
+ * ----------------------------
+ * Autor: Daniel Miñana (Artesano IT)
+ * Descripción: Control de Identidad Digital con Hero Dinámico.
+ * Estándar: Compatible con Pico.css (Sobrescribe contenedores y espaciado).
+ */
+
+:root { 
+    --primary: hsl(199, 100%, 54%); 
+    --spacing-grid: 1rem;
+    --sipa-max-width: 1200px;
+}
+
+/* --- ESTRUCTURA GLOBAL (Layout) --- */
+
+header.container, 
+main.container, 
+footer.container {
+    max-width: var(--sipa-max-width) !important;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+main.container {
+    padding-top: 3rem !important;
+    display: block;
+}
+
+/* --- HERO SECTION (Identidad Visual) --- */
+
+.hero-sipa {
+    background-size: cover;
+    background-position: center;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    color: white;
+}
+
+.hero-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-top: 2rem;
+}
+
+/* --- NAVEGACIÓN E IDENTIDAD --- */
+
+nav {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.logo-icon {
+    font-size: 3rem;
+    color: var(--primary);
+}
+
+.logo-text {
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--primary);
+}
+
+.hero-sipa .nav-link, 
+.hero-sipa .logo-text, 
+.hero-sipa .logo-icon {
+    color: white !important;
+}
+
+/* --- BENTO GRID (Contenido) --- */
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-grid);
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.bloque-card {
+    padding: 1.5rem;
+    border: 1px solid var(--muted-border-color);
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+    background-color: #1a1d21;
+}
+
+.bloque-card:hover { transform: translateY(-5px); }
+
+/* --- FOOTER: AJUSTE DE CENTRADO Y LIMPIEZA TOTAL --- */
+
+.footer-sipa {
+    background-color: #1a1d21;
+    border-top: 1px solid var(--muted-border-color);
+    padding: 4rem 0;
+    margin-top: 5rem;
+    color: #8a8e94;
+    text-align: center;
+}
+
+.footer-sipa .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    justify-content: center;
+    align-items: start;
+    gap: 2rem;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.footer-sipa h6 {
+    color: var(--primary) !important;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 1.2rem;
+}
+
+/* ELIMINACIÓN DE LOS CUADRADITOS (Pico.css override) */
+.footer-links {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.footer-links li {
+    list-style-type: none !important;
+    margin-bottom: 0.4rem;
+    padding: 0 !important;
+}
+
+.footer-links li::before {
+    display: none !important;
+    content: "" !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.footer-links a {
+    color: #8a8e94;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--primary);
+}
+
+/* Botón CV Personalizado */
+.btn-cv-azul {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #3d444d;
+    border-radius: 4px;
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-cv-azul:hover {
+    border-color: var(--primary);
+    background-color: rgba(57, 255, 20, 0.1);
+}
+
+/* ==========================================================================
+   SECCIÓN EDITORIAL: post.html & time.html (INTEGRACIÓN FINAL)
+   ========================================================================== */
+
+/* 1. Cabecera Minimalista (Fija) */
+.header-minimal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10vh;
+    min-height: 80px; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #14171a; 
+    padding: 0 var(--block-spacing-horizontal);
+    z-index: 1000;
+}
+
+.header-minimal nav {
+    margin-bottom: 0;
+    justify-content: right;
+}
+
+/* 2. Layout Base (Móvil/Default) */
+.doc-layout {
+    margin-top: 10vh;
+    padding-left: var(--block-spacing-horizontal);
+    padding-right: var(--block-spacing-horizontal);
+    scroll-padding-top: 12vh;
+}
+
+.grid-document {
+    display: flex;
+    flex-direction: column; /* Apilado en móvil */
+    gap: 2rem;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.sidebar-meta {
+    width: 100%;
+    position: relative;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+/* 3. Layout Escritorio (Integración de tus Reglas Finales) */
+@media (min-width: 992px) {
+    .grid-document {
+        display: grid;
+        grid-template-columns: 300px 1fr; /* Proporción técnica estable */
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .sidebar-meta {
+        position: sticky;
+        top: 12vh;
+        height: calc(100vh - 15vh);
+        overflow-y: auto;
+        padding-right: 1rem;
+        border-bottom: none; /* Quitamos el borde del móvil */
+    }
+}
+
+/* 4. Estilos de Contenido y TOC (Tu Lógica) */
+.content-body {
+    padding-bottom: 5rem;
+    line-height: 1.7; 
+}
+
+.content-body h1, .content-body h2, .doc-layout :target {
+    scroll-margin-top: 12vh; 
+}
+
+/* Acordeón de Código */
+details.code-accordion {
+    border: 1px solid #30363d;
+    background: #0d1117;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+details.code-accordion summary {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: var(--primary);
+    cursor: pointer;
+    list-style: none;
+    font-weight: bold;
+}
+
+/* Niveles de TOC */
+.toc-menu ul { list-style: none; padding: 0; }
+.toc-menu li { margin-bottom: 0.5rem; }
+.toc-nivel-1 { margin-left: 0; font-weight: bold; }
+.toc-nivel-2 { margin-left: 1rem; }
+.toc-nivel-3 { margin-left: 1.5rem; font-size: 0.9rem; }

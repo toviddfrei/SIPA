@@ -1,0 +1,33 @@
+site_name: SIPAweb
+site_description: "Módulo creador web perfil profesional."
+site_author: "Daniel Miñana Montero"
+site_dir: 'docs_tecnicos'
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: indigo
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences # Recomendado para que mkdocstrings renderice bien el código
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."] 
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+
+nav:
+  - Inicio: index.md
+  - Referencia Técnica: referencia.md

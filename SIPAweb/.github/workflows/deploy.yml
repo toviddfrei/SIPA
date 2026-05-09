@@ -1,0 +1,38 @@
+name: SIPAweb Auto-Deploy
+
+on:
+  push:
+    branches: [ main ]  # Se activa al hacer push a la rama principal
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'  # Ignora cambios en la carpeta docs (si solo documentas en MkDocs)
+
+permissions:
+  contents: write # Permiso para que el Action publique la web
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar Motor SIPAweb
+        run: python sipaweb.py
+
+      - name: Desplegar en GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./  # Directorio donde está tu index.html
+          publish_branch: gh-pages

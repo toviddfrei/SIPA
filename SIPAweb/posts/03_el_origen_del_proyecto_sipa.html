@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El origen del proyecto SIPA</title>
+    
+    <link rel="icon" type="image/x-icon" href="../img/favicon.ico">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="../css/custom.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <header class="header-minimal" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../img/avatargithub.png'); background-size: cover; background-position: center;">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 100%; padding: 0 var(--spacing); width: 100%;">
+            
+            <a href="../index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                <img src="../img/danielminanamontero-logo.png" alt="Logo" style="height: 45px; width: auto;">
+                <span style="color: white;font-weight: 700;font-size: 1.4rem;letter-spacing: 0.5px;height: auto;width: 500px;">Daniel Miñana Montero</span>
+            </a>
+
+            <nav style="margin: 0; padding: 0;">
+                <ul style="display: flex; gap: 2rem; margin: 0; list-style: none;">
+                    <li><a href="../index.html"><i class="ph ph-house" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../sobre-mi.html"><i class="ph ph-user" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../proyectos.html"><i class="ph ph-briefcase" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../contacto.html"><i class="ph ph-envelope" style="color: white; font-size: 1.4rem;"></i></a></li>
+                    <li><a href="../ayuda.html"><i class="ph ph-question" style="color: white; font-size: 1.4rem;"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container-fluid doc-layout">
+        <div class="grid-document">
+            <aside class="sidebar-meta">
+                <section class="file-data">
+                    <span class="badge">post</span>
+                    <p><small>Estado: proceso</small></p>
+                    <hr>
+                </section>
+
+                <nav class="toc-menu">
+                    <h6>Contenido</h6>
+                    <ul>
+                        
+                        <li class="toc-nivel-1">
+                            <a href="#el-origen-de-proyecto-sipa" class="secondary">
+                                El Origen de PROYECTO SIPA
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#1-que-es-sipa" class="secondary">
+                                1. ¿Qué es SIPA?
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#2-declaracion-del-problema" class="secondary">
+                                2. Declaración del Problema
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#3-la-solucion-propuesta-fase-1" class="secondary">
+                                3. La Solución Propuesta (Fase 1)
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#4-el-caso-de-uso-ideal" class="secondary">
+                                4. El Caso de Uso Ideal
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#5-cierre-de-fase-de-definicion" class="secondary">
+                                5. Cierre de Fase de Definición
+                            </a>
+                        </li>
+                        
+                        <li class="toc-nivel-2">
+                            <a href="#arquitectura-de-sistema-y-seguridad-de-capa-de-aplicacion" class="secondary">
+                                Arquitectura de Sistema y Seguridad de Capa de Aplicación
+                            </a>
+                        </li>
+                        
+                    </ul>
+                </nav>
+            </aside>
+
+            <article class="content-body">
+                <h1>El origen del proyecto SIPA</h1> <hr>
+                <h1 id="el-origen-de-proyecto-sipa">El Origen de PROYECTO SIPA</h1>
+<p>Documento de Visión y Propósito (Fase 1: Definición)</p>
+<h2 id="1-que-es-sipa">1. ¿Qué es SIPA?</h2>
+<p><a href="https://github.com/toviddfrei/SIPA">SIPA</a> es un proyecto personal diseñado para resolver la gestión de perfiles profesionales de alta complejidad. Las siglas definen los pilares del sistema que permitirán a profesionales con trayectorias extensas (como la mía, con 53 años) mantener su relevancia en un mercado tecnológico volátil:</p>
+<ul>
+<li>S (Sistema): Un ecosistema orquestado de módulos.</li>
+<li>I (Inteligencia): Capacidad de aprendizaje automático para la adaptación de contenidos.</li>
+<li>P (Personal): Un enfoque único en la trayectoria y habilidades del individuo.</li>
+<li>A (Autorizada): Un entorno seguro, con control de acceso y respeto por la legalidad de las fuentes.</li>
+</ul>
+<h2 id="2-declaracion-del-problema">2. Declaración del Problema</h2>
+<p><a href="https://github.com/toviddfrei/SIPA">SIPA</a> nace de la necesidad de mitigar tres obstáculos críticos detectados en la gestión de mi trayectoria laboral y formativa:</p>
+<ul>
+<li>
+<p>La Carga Administrativa del Perfil: El proceso de crear, adaptar y actualizar curriculums, cartas de presentación y resúmenes técnicos se ha convertido en un trabajo de tiempo completo que consume horas que deberían dedicarse al aprendizaje.</p>
+</li>
+<li>
+<p>Gestión de Activos Técnicos: Genero una cantidad ingente de documentación derivada de mis laboratorios, experimentos y formación. Sin una herramienta de gestión, este conocimiento queda disperso y pierde su capacidad de impacto en mi perfil público.</p>
+</li>
+<li>
+<p>Desfase con las Tendencias (Trend Gap): Existe una dificultad real para alinear instantáneamente mis hitos personales con las noticias y demandas actuales del sector (especialmente en Ciberseguridad).</p>
+</li>
+</ul>
+<h2 id="3-la-solucion-propuesta-fase-1">3. La Solución Propuesta (Fase 1)</h2>
+<p>Para solventar estos problemas, el proyecto se divide inicialmente en tres módulos operativos que conforman el núcleo de la solución:</p>
+<ul>
+<li><a href="https://github.com/toviddfrei/SIPA">SIPA</a>bap (Arranque): La base que pone en marcha el sistema.</li>
+<li><a href="https://github.com/toviddfrei/SIPA">SIPA</a>del (Kernel): El motor lógico que gestionará el Roadmap, las tablas de publicación y la toma de decisiones.</li>
+<li><a href="https://github.com/toviddfrei/SIPA">SIPA</a>cur (Procesamiento): El brazo ejecutor que transforma documentación propia y noticias externas (ej. INCIBE) a formato .md, permitiendo que la IA aprenda de ellas.</li>
+</ul>
+<h2 id="4-el-caso-de-uso-ideal">4. El Caso de Uso Ideal</h2>
+<p>El objetivo final de esta fase es que <a href="https://github.com/toviddfrei/SIPA">SIPA</a> actúe como un consultor de carrera inteligente.</p>
+<blockquote>
+<p>Ejemplo: Si tras procesar noticias de INCIBE, el sistema detecta un nuevo vector de ataque de Phishing, <a href="https://github.com/toviddfrei/SIPA">SIPA</a> analizará mi documentación de laboratorios y me sugerirá: "Has realizado pruebas sobre este tema recientemente; ¿te gustaría destacar esta habilidad en tu perfil web para alinearte con la tendencia actual?".</p>
+</blockquote>
+<h2 id="5-cierre-de-fase-de-definicion">5. Cierre de Fase de Definición</h2>
+<p>Este documento, junto con el ERS (Especificación de Requisitos del Sistema), marca el fin de la Fase 1. Con los objetivos de automatización, control de difusión y motor de sugerencias claramente definidos, el proyecto está listo para avanzar hacia la Fase 2: Diseño de Arquitectura.</p>
+<h2 id="arquitectura-de-sistema-y-seguridad-de-capa-de-aplicacion">Arquitectura de Sistema y Seguridad de Capa de Aplicación</h2>
+<ul>
+<li>Anexo Técnico: Resolución Dinámica de Directorio Raíz (RDDR)</li>
+</ul>
+<p>El PROYECTO <a href="https://github.com/toviddfrei/SIPA">SIPA</a> implementa un mecanismo de Resolución Dinámica de Directorio Raíz mediante la manipulación controlada del vector sys.path en tiempo de ejecución. Esta técnica, definida técnicamente como Runtime Path Injection, se utiliza para garantizar la portabilidad agnóstica de los módulos (<a href="https://github.com/toviddfrei/SIPA">SIPA</a>bap, <a href="https://github.com/toviddfrei/SIPA">SIPA</a>del, , <a href="https://github.com/toviddfrei/SIPA">SIPA</a>doc, <a href="https://github.com/toviddfrei/SIPA">SIPA</a>cur y FHS-CyberAudit), permitiendo que el ecosistema sea funcional independientemente de la jerarquía de directorios absoluta del sistema anfitrión.</p>
+<p>Para mitigar los vectores de ataque asociados a la manipulación de rutas de búsqueda de módulos <strong>(Python Path Hijacking)</strong>, el sistema integra el módulo FHS-CyberAudit. Este actúa como un Centinela de Integridad de Entorno, validando de forma previa que la ruta resuelta mediante os.path.abspath(__file__) se encuentre bajo una 'Zona Blanca' de ejecución autorizada.</p>
+<ul>
+<li>Este diseño cumple con dos pilares fundamentales del proyecto:</li>
+<li><strong>Autonomía Operativa:</strong> El sistema realiza autogestión de sus dependencias internas sin requerir configuraciones globales persistentes en el sistema operativo.</li>
+<li><strong>Transparencia de Auditoría:</strong> Cada resolución de ruta genera un artefacto de evidencia en formato Markdown (.md), asegurando una trazabilidad total para el cumplimiento de normativas de seguridad de datos y código ético de la información.</li>
+</ul>
+<p>La decisión que se concreta es la de optar por una solución cómoda, flexible, pero sin perder ni un átomo de seguridad, la decisión de no optar por un desarrollo industrial en este contexto, lo planteo sobre esta tabla:</p>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>Estándar Industrial (PYTHONPATH)</th>
+<th>Solución <a href="https://github.com/toviddfrei/SIPA">SIPA</a> (Mochila de Auditoría RDDR)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Configuración</td>
+<td>Requiere intervención manual en el SO (Variables de entorno).</td>
+<td>Automática: Se resuelve al arrancar el script.</td>
+</tr>
+<tr>
+<td>Portabilidad</td>
+<td>Difícil de mover entre Windows/Linux sin re configurar.</td>
+<td>Agnóstica: Funciona en cualquier ruta autorizada.</td>
+</tr>
+<tr>
+<td>Visibilidad</td>
+<td>"El sistema operativo ""oculta"" la configuración."</td>
+<td>Transparente: La ruta se valida y loguea en cada inicio.</td>
+</tr>
+<tr>
+<td>Seguridad</td>
+<td>Confianza ciega en la variable de entorno.</td>
+<td>Activa: FHS-CyberAudit bloquea si la ruta es sospechosa.</td>
+</tr>
+<tr>
+<td>Mantenibilidad</td>
+<td>Riesgo de conflictos entre proyectos distintos.</td>
+<td>Aislada: Solo afecta al proceso actual de <a href="https://github.com/toviddfrei/SIPA">SIPA</a>.</td>
+</tr>
+</tbody>
+</table>
+<p>Por qué tu solución es superior para un "Entorno Evolutivo", y no una opción industrial como modificar las variables locales del host:</p>
+<ul>
+<li><strong>La robustez es clave.</strong> Al usar la <strong>Resolución Dinámica de Directorio Raíz (RDDR)</strong> protegida por FHS-CyberAudit, estás creando un sistema que:</li>
+<li><strong>Reduce el error humano:</strong> No tienes que recordar configurar nada en cada PC nuevo; la "mochila" se encarga.</li>
+<li><strong>Facilita el Aprendizaje Automático:</strong> Como los módulos de aprendizaje (<a href="https://github.com/toviddfrei/SIPA">SIPA</a>cur) necesitan procesar documentos .md de fuentes como INCIBE, tener rutas dinámicas pero controladas permite mover el motor de procesamiento sin romper los enlaces de datos.</li>
+<li><strong>Auditabilidad Pedagógica:</strong> Si presentas este proyecto, puedes mostrar físicamente el informe .md generado al momento. No es una configuración invisible, es un proceso auditable.</li>
+</ul>
+            </article>
+        </div>
+    </main>
+
+    <footer class="footer-sipa">
+        <div class="container">
+            <div class="grid">
+                <div class="footer-col">
+                    <p><strong>Daniel Miñana Montero</strong><br>
+                    <small>by SIPAweb 2026</small></p>
+                    <a href="#top" class="nav-link-subir"><i class="ph ph-caret-double-up"></i> Inicio</a>
+                </div>
+                
+                <div class="footer-col">
+                    <h6>Conectar</h6>
+                    <ul class="footer-links">
+                        <li><a href="https://linkedin.com/in/danielminanamontero" target="_blank">LinkedIn</a></li>
+                        <li><a href="https://github.com/danielminanamontero" target="_blank">GitHub (Mimod Bland)</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h6>Recursos</h6>
+                    <a href="#" class="btn-cv-azul">
+                        <i class="ph ph-file-pdf"></i> Currículum
+                    </a>
+                </div>
+
+                <div class="footer-col">
+                    <h6>Radar Ciber</h6>
+                    <ul class="footer-links">
+                        <li><a href="https://www.incibe.es" target="_blank">Incibe</a></li>
+                        <li><a href="#">Seguridad IT</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

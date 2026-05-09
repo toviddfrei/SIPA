@@ -1,0 +1,23 @@
+# Entorno Virtual
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# MkDocs (Solo si no quieres subir el sitio construido)
+site/
+
+# IDEs
+.vscode/
+.idea/
+
+# Templates desarrollo
+templates/static/posts/process
+
+# Sincronización con Mega
+.megaignore
+.directory
+
