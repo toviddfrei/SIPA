@@ -3,8 +3,7 @@ name: SIPAweb Auto-Deploy
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'external/SIPAweb/**'  # Solo se activa si hay cambios aquí modificar en un futuro
+  workflow_dispatch:      # <--- ESTO permite lanzar la acción manualmente desde la web
 
 permissions:
   contents: write
