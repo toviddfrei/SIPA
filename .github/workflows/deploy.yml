@@ -3,12 +3,8 @@ name: SIPAweb Auto-Deploy
 on:
   push:
     branches: [ main ]
-    # Se activa solo cuando hay cambios en el código de la web
     paths:
-      - 'external/SIPAweb/**'
-    paths-ignore:
-      - 'README.md'
-      - 'external/SIPAweb/docs/**'
+      - 'external/SIPAweb/**'  # Solo se activa si hay cambios aquí
 
 permissions:
   contents: write
