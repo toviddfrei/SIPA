@@ -32,6 +32,7 @@ SIPAweb es un motor de generación estática (SSG) personalizado que transforma 
 - Este repositorio demuestra competencias avanzadas en:
   - Ingeniería de Software: Desarrollo de flujos automatizados de extremo a extremo.
   - CI/CD: Implementación de despliegue continuo sin intervención humana.
+    - Verificado tras integración 11/05/2026
   - Arquitectura de Datos: Separación de lógica (Python) y contenido (Markdown).
 
 ## 🛤️ Roadmap (Cronograma de Hitos)
