@@ -3,7 +3,9 @@ name: SIPAweb Auto-Deploy
 on:
   push:
     branches: [ master ]
-  workflow_dispatch:      # <--- ESTO permite lanzar la acción manualmente desde la web
+    paths:
+      - 'external/SIPAweb/**' # Solo se activa si hay cambios en la web
+  workflow_dispatch: 
 
 permissions:
   contents: write
@@ -24,18 +26,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-        # Indicamos que el archivo está dentro de la subcarpeta
         working-directory: external/SIPAweb
 
       - name: Ejecutar Motor SIPAweb
         run: python sipaweb.py
-        # Ejecutamos el script desde su carpeta para que las rutas relativas no fallen
         working-directory: external/SIPAweb
 
       - name: Desplegar en GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Importante: publicar solo lo que genera el motor
           publish_dir: ./external/SIPAweb
           publish_branch: gh-pages
