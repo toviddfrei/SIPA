@@ -2,7 +2,7 @@ name: SIPAweb Auto-Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:      # <--- ESTO permite lanzar la acción manualmente desde la web
 
 permissions:
