@@ -14,7 +14,7 @@ from collections import Counter
 
 # --- CONFIGURACIÓN DE LOGGING ---
 logging.basicConfig(level=logging.INFO, format='%(message)s')
-logger = logging.getLogger("SIPA_CURATOR")
+logger = logging.getLogger("SIPAcur")
 
 try:
     from fpdf import FPDF
