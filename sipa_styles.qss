@@ -1,0 +1,107 @@
+/* sipa_styles.qss */
+
+/* --- CONFIGURACIÓN ESTRUCTURAL --- */
+QMainWindow { 
+    background-color: #121212; 
+}
+
+#Sidebar { 
+    background-color: #1A1A1A; 
+    border-right: 1px solid #2D2D2D; 
+}
+
+#Card { 
+    background-color: #242424; 
+    border: 1px solid #333333; 
+    border-radius: 12px; 
+}
+
+/* --- ELEMENTOS DE TEXTO E IDENTIDAD --- */
+QLabel { 
+    color: #E0E0E0; 
+}
+
+#AppTitle {
+    font-size: 26px; 
+    font-weight: bold;
+}
+
+#CardTitle {
+    font-size: 13px; 
+    color: #3A86FF;
+}
+
+#UserName {
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #00FF95;
+}
+
+#UserRange {
+    color: #666666; 
+    font-size: 11px;
+}
+
+#SidebarHeader {
+    color: #888888; 
+    font-size: 10px;
+}
+
+/* --- ENTRADAS DE TEXTO Y CONSOLA --- */
+#Console {
+    background-color: #050505;
+    color: #00FF95;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    border: 1px solid #222222;
+}
+
+/* --- BOTONES (COMPORTAMIENTO BASE Y HOVER) --- */
+QPushButton {
+    background-color: #333333;
+    color: #E0E0E0;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+QPushButton:hover { 
+    background-color: #3A86FF; 
+}
+
+/* --- BOTONES CON IDENTIFICADORES ESPECIALES --- */
+#BtnSidebar {
+    text-align: left; 
+    background: transparent; 
+    font-size: 13px;
+}
+#BtnSidebar:hover {
+    background-color: #242424;
+}
+
+#BtnSidebarDisabled {
+    text-align: left; 
+    background: transparent; 
+    color: #444444;
+}
+
+#BtnManage { 
+    background-color: #3A86FF; 
+}
+
+#BtnLocked { 
+    background-color: #222222; 
+    color: #555555; 
+    border: 1px dashed #444444; 
+}
+
+#BtnCierre { 
+    background-color: #442222; 
+    color: #E63946; 
+    border: 1px solid #E63946; 
+}
+#BtnCierre:hover {
+    background-color: #E63946;
+    color: #121212;
+}
