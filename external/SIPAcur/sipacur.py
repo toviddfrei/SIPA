@@ -2,25 +2,22 @@
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: sipacur.py
 # Módulo: SIPAcur (IA personal)
-# Versión: 1.4.9.1 | Fecha: 14/05/2026
+# Versión: 2.0.0.0 | Fecha: 16/05/2026
 # Autor: Daniel Miñana Montero & Gemini
 # ----------------------------------------------------------
-# DESCRIPCIÓN: Dashboard del módulo SIPAcur, puntos de inicio
-# de los distintos servios, y punto visual del funcionamiento
+# DESCRIPCIÓN: Dashboard del módulo SIPAcur adaptado como 
+# sub-widget para la arquitectura SPA de SIPA.
 # ==========================================================
 
-import sys
 import os
 import json
 import psutil
 from datetime import datetime
 from pathlib import Path
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget, 
-                             QVBoxLayout, QHBoxLayout, QTableView, QLineEdit, 
-                             QPushButton, QLabel, QProgressBar, QTextEdit, 
-                             QFrame, QHeaderView)
-from PyQt6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QThread, pyqtSignal
-from PyQt6.QtGui import QFont
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableView, 
+                               QLineEdit, QPushButton, QProgressBar, QTextEdit, 
+                               QFrame, QHeaderView, QTabWidget)
+from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QThread, Signal
 
 # --- CONFIGURACIÓN DE COLUMNAS ---
 COLUMNAS = [
@@ -28,15 +25,7 @@ COLUMNAS = [
     "estado", "tamaño_kB", "fecha_entrada", "unidad", "path_actual"
 ]
 
-# --- CARGADOR DE ESTILO ---
-def aplicar_estilo(app):
-    ruta_qss = os.path.join(os.path.dirname(os.path.abspath(__file__)), "styles.qss")
-    if os.path.exists(ruta_qss):
-        with open(ruta_qss, "r", encoding="utf-8") as f:
-            app.setStyleSheet(f.read())
-            print("🎨 Estilo QSS cargado correctamente.")
-
-# --- MODELO DE LA TABLA (Integrado para evitar ModuleNotFoundError) ---
+# --- MODELO DE LA TABLA ---
 class MarkdownModel(QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
@@ -82,11 +71,11 @@ class MarkdownModel(QAbstractTableModel):
             return COLUMNAS[section].replace("_", " ").upper()
         return None
 
-# --- MOTOR DE ESCANEO (Hilo secundario) ---
+# --- MOTOR DE ESCANEO ---
 class ScannerWorker(QThread):
-    progreso = pyqtSignal(int)
-    log_msg = pyqtSignal(str)
-    finalizado = pyqtSignal(list)
+    progreso = Signal(int)
+    log_msg = Signal(str)
+    finalizado = Signal(list)
 
     def __init__(self, datos_existentes):
         super().__init__()
@@ -98,7 +87,6 @@ class ScannerWorker(QThread):
         contador = len(self.datos_acumulados) + 1
         rutas_inicio = [str(Path.home())]
         
-        # Detectar unidades en Linux
         for p in psutil.disk_partitions():
             if p.mountpoint.startswith(('/media', '/mnt')):
                 rutas_inicio.append(p.mountpoint)
@@ -126,22 +114,18 @@ class ScannerWorker(QThread):
             self.progreso.emit(int(((i + 1) / len(rutas_inicio)) * 100))
         self.finalizado.emit(self.datos_acumulados)
 
-# --- DASHBOARD PRINCIPAL ---
-class SIPAcurDashboard(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("SIPAcur v2.0 - Dashboard de Captura")
-        self.setMinimumSize(1400, 850)
+# --- DASHBOARD DE CAPTURA (SUB-WIDGET) ---
+class SIPAcurDashboard(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.datos_json = []
         self.cargar_datos()
 
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
-        lyt = QHBoxLayout(main_widget)
-        lyt.setContentsMargins(0, 0, 0, 0)
-        lyt.setSpacing(0)
+        lyt_base = QHBoxLayout(self)
+        lyt_base.setContentsMargins(0, 0, 0, 0)
+        lyt_base.setSpacing(0)
 
-        # Sidebar
+        # Sidebar Interno SIPAcur
         self.sidebar = QFrame()
         self.sidebar.setObjectName("Sidebar")
         self.sidebar.setFixedWidth(220)
@@ -155,11 +139,11 @@ class SIPAcurDashboard(QMainWindow):
             side_lyt.addWidget(b)
         
         side_lyt.addStretch()
-        lyt.addWidget(self.sidebar)
+        lyt_base.addWidget(self.sidebar)
 
         # Tabs
         self.tabs = QTabWidget()
-        lyt.addWidget(self.tabs)
+        lyt_base.addWidget(self.tabs)
 
         # Tab Registro
         self.tab_reg = QWidget()
@@ -216,10 +200,3 @@ class SIPAcurDashboard(QMainWindow):
             json.dump(self.datos_json, f, indent=4, ensure_ascii=False)
         self.refresh_table()
         self.btn_scan.setEnabled(True)
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    aplicar_estilo(app) 
-    win = SIPAcurDashboard()
-    win.show()
-    sys.exit(app.exec())

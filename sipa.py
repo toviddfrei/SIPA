@@ -1,3 +1,11 @@
+# ==========================================================
+# PROYECTO SIPA - Sistema identificación personal autorizada
+# Archivo: sipa.py
+# Módulo: Core Dashboard / SPA Manager
+# Versión: 2.0.0.1 | Fecha: 16/05/2026
+# Autor: Daniel Miñana Montero & Gemini
+# ==========================================================
+
 import sys
 import os
 import re
@@ -14,6 +22,29 @@ from PySide6.QtCore import Qt, QTimer
 USER_NAME = getpass.getuser()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_SIPA = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
+
+# 1. Resolver e inyectar la ruta del submódulo ANTES del import
+RUTA_SIPACUR = os.path.join(CURRENT_DIR, "external", "SIPAcur")
+if RUTA_SIPACUR not in sys.path:
+    sys.path.append(RUTA_SIPACUR)
+
+# 2. Intentar importar una vez que sys.path ya está actualizado
+try:
+    from sipacur import SIPAcurDashboard
+except ImportError:
+    SIPAcurDashboard = None
+
+# --- LOG DE DIAGNÓSTICO ESTRICTO ---
+print(def_path := os.path.join(CURRENT_DIR, "external", "SIPAcur"))
+print("¿Existe la carpeta?:", os.path.exists(def_path))
+if os.path.exists(def_path):
+    print("Contenido:", os.listdir(def_path))
+
+try:
+    from sipacur import SIPAcurDashboard
+except ImportError as e:
+    print(f"❌ ERROR REAL DE IMPORTACIÓN: {e}") # Esto saldrá en tu terminal de VSCode/Consola
+    SIPAcurDashboard = None
 
 if not os.path.exists(ROOT_SIPA) or "SIPA" not in ROOT_SIPA:
     CONFIG_FILE = f"/home/{USER_NAME}/SIPA/data/archive/template_propietario.md"
@@ -68,7 +99,6 @@ class ServiceCard(QFrame):
         self.lbl_title = QLabel(f"<b>{title.upper()}</b>")
         self.lbl_title.setObjectName("CardTitle")
         
-        # El color del status dinámico se asigna de manera simple según valor
         color_status = "#00FF95" if "ACTIVO" in status or "OK" in status else "#888888"
         self.lbl_status = QLabel(f"● {status}")
         self.lbl_status.setStyleSheet(f"color: {color_status}; font-weight: bold;")
@@ -96,7 +126,6 @@ class ServiceCard(QFrame):
 
 
 class VistaDashboard(QWidget):
-    """Esta clase representa el contenido del Dashboard (El panel de cuadriculas con tarjetas)"""
     def __init__(self, identidad, user_level, callback_config, parent=None):
         super().__init__(parent)
         self.identidad = identidad
@@ -156,7 +185,6 @@ class SIPADashboard(QMainWindow):
         self.setWindowTitle("SIPA SYSTEM")
         self.resize(1200, 800)
         
-        # CARGA NATIVA E INTEGRACIÓN DEL ARCHIVO QSS EXTERNO
         if os.path.exists(QSS_FILE_PATH):
             with open(QSS_FILE_PATH, "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
@@ -189,20 +217,22 @@ class SIPADashboard(QMainWindow):
         self.sidebar_layout.addWidget(self.lbl_rango)
         self.sidebar_layout.addSpacing(30)
 
-        # Botones de la barra lateral
+        # Botones de la barra lateral (Actualizados con SIPAcur)
         self.btn_dash = QPushButton("📊  Dashboard")
+        self.btn_sipacur = QPushButton("🧠  IA SIPAcur")
         self.btn_serv = QPushButton("⚙️  Servicios")
         self.btn_conf = QPushButton("🛠  Configuración")
         
-        for b in [self.btn_dash, self.btn_serv, self.btn_conf]:
+        for b in [self.btn_dash, self.btn_sipacur, self.btn_serv, self.btn_conf]:
             b.setObjectName("BtnSidebar")
             b.setCursor(Qt.PointingHandCursor)
             self.sidebar_layout.addWidget(b)
 
-        # Eventos de navegación estilo iframe
+        # Eventos de navegación asignados a los nuevos índices
         self.btn_dash.clicked.connect(lambda: self.navegar_a(0))
-        self.btn_serv.clicked.connect(lambda: self.navegar_a(1))
-        self.btn_conf.clicked.connect(lambda: self.navegar_a(2))
+        self.btn_sipacur.clicked.connect(lambda: self.navegar_a(1))
+        self.btn_serv.clicked.connect(lambda: self.navegar_a(2))
+        self.btn_conf.clicked.connect(lambda: self.navegar_a(3))
 
         self.sidebar_layout.addStretch()
         self.btn_exit = QPushButton("CIERRE SEGURO")
@@ -215,7 +245,6 @@ class SIPADashboard(QMainWindow):
         layout_derecho = QVBoxLayout(self.zona_derecha)
         layout_derecho.setContentsMargins(30, 30, 30, 20)
 
-        # EL "IFRAME" (QStackedWidget)
         self.contenedor_paginas = QStackedWidget()
         layout_derecho.addWidget(self.contenedor_paginas, stretch=1)
 
@@ -233,7 +262,6 @@ class SIPADashboard(QMainWindow):
         self.identidad, logs_iniciales = extraer_identidad()
         self.user_level = self.identidad["tipo_user"]
         
-        # Enviar logs iniciales de búsqueda del archivo md a la consola cargada
         for msg in logs_iniciales: 
             self.add_log(msg)
         
@@ -243,15 +271,24 @@ class SIPADashboard(QMainWindow):
         self.lbl_user_name.setText(f"{self.identidad['nombre']} {self.identidad['apellido_1']}")
         self.lbl_rango.setText(f"Rango: Nivel {self.user_level}")
         
-        # --- INSTANCIACIÓN DE LAS PÁGINAS DEL CONTENEDOR (IFRAME) ---
+        # --- INSTANCIACIÓN DE LAS PÁGINAS (QStackedWidget) ---
         self.vista_dashboard = VistaDashboard(self.identidad, self.user_level, self.abrir_configuracion_personalizada)
         
+        if SIPAcurDashboard:
+            self.vista_sipacur = SIPAcurDashboard()
+            self.add_log("🧠 Módulo SIPAcur acoplado con éxito.")
+        else:
+            self.vista_sipacur = QLabel("❌ Error: 'sipacur.py' no encontrado en la ruta de extensiones.")
+            self.vista_sipacur.setAlignment(Qt.AlignCenter)
+            self.add_log("⚠️ Advertencia: No se pudo cargar SIPAcur.")
+            
         self.vista_servicios_placeholder = QWidget() 
         self.vista_config_placeholder = QWidget()    
         
-        self.contenedor_paginas.addWidget(self.vista_dashboard)           # Índice 0
-        self.contenedor_paginas.addWidget(self.vista_servicios_placeholder) # Índice 1
-        self.contenedor_paginas.addWidget(self.vista_config_placeholder)    # Índice 2
+        self.contenedor_paginas.addWidget(self.vista_dashboard)             # Índice 0
+        self.contenedor_paginas.addWidget(self.vista_sipacur)               # Índice 1
+        self.contenedor_paginas.addWidget(self.vista_servicios_placeholder)   # Índice 2
+        self.contenedor_paginas.addWidget(self.vista_config_placeholder)      # Índice 3
         
         if self.user_level < 5:
             self.btn_conf.setEnabled(False)
@@ -259,7 +296,7 @@ class SIPADashboard(QMainWindow):
 
     def navegar_a(self, indice):
         self.contenedor_paginas.setCurrentIndex(indice)
-        nombres_modulos = {0: "Dashboard", 1: "Servicios", 2: "Configuración"}
+        nombres_modulos = {0: "Dashboard", 1: "IA SIPAcur", 2: "Servicios", 3: "Configuración"}
         self.add_log(f"📂 Navegando a módulo: {nombres_modulos.get(indice)}")
 
     def abrir_configuracion_personalizada(self):
