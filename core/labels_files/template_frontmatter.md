@@ -1,0 +1,26 @@
+---
+id_interno: 0,
+pendiente: "Si",
+revisado: "No",
+procesado: "No",
+registrado: "No",
+nombre_fichero_original: "template_frontmatter.md",
+tipo: "etiqueta",
+path_actual: "/SIPA/core/labels_files/template_frontmatter.md",
+unidad: "/:",
+estado: "Cerrado",
+hash: 0,
+observaciones: "Notas propietario",
+total_palabras: 0,
+palabras: "etiqueta, fichero, frontmatter, linux, python",
+frase: "Está es la etiqueta estándar para los ficheros SIPA",
+path_publicado: "Ruta publicación",
+fecha_creación: "16/05/2026",
+fecha_entrada: "16/05/2026",
+fecha_publicación: " ",
+tamaño_kB: 0,
+extensión: " ",
+enlace: " ",
+SIPAcur_Sugerencia: "(Según las palabras y frases, comparar con las carpetas de knowledge y sugerir ubicación)"
+---
+
