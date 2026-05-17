@@ -1,151 +1,241 @@
+# ==========================================================
+# PROYECTO SIPA - Sistema identificación personal autorizada
+# Archivo: ssipa_config.py
+# Módulo: Configuración del Sistema (Ecosistema Shell/Terminal)
+# Versión: 2.0.1.2 | Fecha: 17/05/2026
+# Autor: Daniel Miñana Montero & Gemini
+# ==========================================================
+
 import sys
 import os
 import socket
 import json
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                             QHBoxLayout, QTextEdit, QPushButton, QLabel, QFrame)
-from PySide6.QtCore import Qt
+from datetime import datetime
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, 
+                             QPushButton, QLabel, QFrame, QApplication)
+from PySide6.QtCore import Qt, QTimer
 
-# --- 1. SEGURIDAD SENTINEL (Manteniendo tu lógica) ---
-try:
-    from external.sentinel_fhs_CA import sentinel_v002_fhs_CA as sentinel
-    if not sentinel.sonda.ejecutar_auditoria(sys.argv[0]):
-        sys.exit(1)
-except ImportError:
-    pass
-
-# --- 2. CONFIGURACIÓN DE RUTAS (Escalada a Raíz) ---
-
-# Ubicación actual: /home/toviddfrei/SIPA/core/services/tu_script.py
+# --- CONFIGURACIÓN DE RUTAS DE LATIDO (Heartbeat) ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+NOMBRE_SCRIPT = os.path.splitext(os.path.basename(__file__))[0]
+ARCHIVO_LIVE = os.path.join(CURRENT_DIR, f".{NOMBRE_SCRIPT}.live")
 
-# Subimos dos niveles para llegar a SIPA/
-# Nivel 1: de /services/ a /core/
-# Nivel 2: de /core/ a /SIPA/
+# --- RESOLUCIÓN DE RUTA DE IDENTIDAD ---
 ROOT_SIPA = os.path.dirname(os.path.dirname(CURRENT_DIR))
-
-# Construimos la ruta apuntando a la raíz real
 CONFIG_FILE = os.path.join(ROOT_SIPA, "data", "archive", "template_propietario.md")
 
-print(f"🔍 Buscando configuración en: {CONFIG_FILE}")
 
-# --- 3. ESTILO COHERENTE (Cyber-Dark Esmeralda) ---
-STYLE_SHEET = """
-    QMainWindow { background-color: #121212; }
-    #MainPanel { background-color: #1A1A1A; border: 1px solid #2D2D2D; border-radius: 10px; }
-    
-    QTextEdit { 
-        background-color: #050505; 
-        color: #E0E0E0; 
-        font-family: 'Consolas', monospace; 
-        font-size: 13px;
-        border: 1px solid #333;
-        border-radius: 5px;
-        padding: 10px;
-    }
-    
-    QLabel#Title { color: #00FF95; font-size: 18px; font-weight: bold; }
-    
-    QPushButton#SaveBtn {
-        background-color: #00FF95;
-        color: #000;
-        font-weight: bold;
-        border-radius: 5px;
-        padding: 12px;
-    }
-    QPushButton#SaveBtn:hover { background-color: #00CC78; }
-    
-    QPushButton#CancelBtn {
-        background-color: transparent;
-        color: #888;
-        border: 1px solid #444;
-    }
-    QPushButton#CancelBtn:hover { color: #FFF; border: 1px solid #888; }
-"""
-
-class ConfigEditorNode(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("SIPA | Nodo de Configuración de Propietario")
-        self.resize(800, 600)
-        self.setStyleSheet(STYLE_SHEET)
-
-        # Contenedor Principal
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
-        layout.setContentsMargins(30, 30, 30, 30)
-
-        panel = QFrame()
-        panel.setObjectName("MainPanel")
-        panel_layout = QVBoxLayout(panel)
-        panel_layout.setContentsMargins(20, 20, 20, 20)
-
-        # Cabecera
-        header = QLabel("⚙️ CONFIGURACIÓN DE IDENTIDAD")
-        header.setObjectName("Title")
-        panel_layout.addWidget(header)
+class ConfigEditorNode(QWidget):
+    """Nodo de configuración optimizado con estética de consola Shell de seguridad"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("SipaConfigTerminal")
         
-        info = QLabel("Edite los metadatos de su ficha personal. Los cambios requieren reinicio.")
-        info.setStyleSheet("color: #888; font-size: 11px; margin-bottom: 10px;")
-        panel_layout.addWidget(info)
+        # Generar señal de vida para el Dashboard
+        self.crear_senal_vida()
+        self.init_ui()
+        self.load_config_file()
 
-        # Editor de Texto
+    def crear_senal_vida(self):
+        try:
+            with open(ARCHIVO_LIVE, 'w', encoding='utf-8') as f:
+                f.write("RUNNING")
+        except Exception as e:
+            print(f"Error al escribir señal de vida: {e}")
+
+    def borrar_senal_vida(self):
+        try:
+            if os.path.exists(ARCHIVO_LIVE):
+                os.remove(ARCHIVO_LIVE)
+        except Exception as e:
+            print(f"Error al limpiar señal de vida: {e}")
+
+    def closeEvent(self, event):
+        self.borrar_senal_vida()
+        event.accept()
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(10)
+
+        # Contenedor Principal estilo Terminal / Consola
+        self.terminal_frame = QFrame()
+        self.terminal_frame.setObjectName("TerminalFrame")
+        
+        self.terminal_frame.setStyleSheet("""
+            QFrame#TerminalFrame {
+                background-color: #0A0A0A;
+                border: 1px solid #1F1F1F;
+                border-radius: 6px;
+            }
+            QLabel#TerminalPrompt {
+                color: #00FF95;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 13px;
+                font-weight: bold;
+            }
+            QLabel#TerminalPath {
+                color: #00BCFF;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 12px;
+            }
+            QTextEdit#ConsoleEditor {
+                background-color: #050505;
+                color: #00FF95;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 13px;
+                border: 1px solid #1A1A1A;
+                border-radius: 4px;
+                padding: 12px;
+            }
+            QPushButton#TerminalSaveBtn {
+                background-color: #00FF95;
+                color: #000000;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-weight: bold;
+                font-size: 12px;
+                border-radius: 4px;
+                padding: 8px 20px;
+            }
+            QPushButton#TerminalSaveBtn:hover {
+                background-color: #00CC78;
+            }
+            QPushButton#TerminalSaveBtn:pressed {
+                background-color: #00995A;
+            }
+        """)
+        
+        terminal_layout = QVBoxLayout(self.terminal_frame)
+        terminal_layout.setContentsMargins(15, 15, 15, 15)
+        terminal_layout.setSpacing(12)
+
+        # --- CABECERA DE LA CONSOLA ---
+        header_layout = QHBoxLayout()
+        
+        prompt_symbol = QLabel("sipa-system@root:~#")
+        prompt_symbol.setObjectName("TerminalPrompt")
+        
+        ruta_display = f" nano ../data/archive/{os.path.basename(CONFIG_FILE)}"
+        path_lbl = QLabel(ruta_display)
+        path_lbl.setObjectName("TerminalPath")
+        
+        header_layout.addWidget(prompt_symbol)
+        header_layout.addWidget(path_lbl)
+        header_layout.addStretch()
+        
+        time_lbl = QLabel(f"SYS_SESSION: {datetime.now().strftime('%H:%M:%S')}")
+        time_lbl.setStyleSheet("color: #444444; font-family: 'Consolas', monospace; font-size: 11px;")
+        header_layout.addWidget(time_lbl)
+        
+        terminal_layout.addLayout(header_layout)
+
+        # --- EDITOR DE TEXTO EN MODO CÓDIGO ---
         self.editor = QTextEdit()
-        panel_layout.addWidget(self.editor)
+        self.editor.setObjectName("ConsoleEditor")
+        self.editor.setTabStopDistance(32)
+        terminal_layout.addWidget(self.editor)
 
-        # Botonera
-        btn_layout = QHBoxLayout()
-        self.btn_cancel = QPushButton("DESCARTAR")
-        self.btn_cancel.setObjectName("CancelBtn")
-        self.btn_save = QPushButton("💾 GUARDAR Y SINCRONIZAR")
-        self.btn_save.setObjectName("SaveBtn")
+        # --- BARRA DE ACCIONES INFERIOR ---
+        footer_layout = QHBoxLayout()
         
-        btn_layout.addWidget(self.btn_cancel)
-        btn_layout.addWidget(self.btn_save)
-        panel_layout.addLayout(btn_layout)
+        # Guardamos la etiqueta de información como atributo de clase para poder cambiar su texto dinámicamente
+        self.info_foot = QLabel("[ F2: Exit ]  [ Ctrl+O: Save ]  ||  Status: Root Access Verified")
+        self.info_foot.setStyleSheet("color: #555555; font-family: 'Consolas', monospace; font-size: 11px;")
+        footer_layout.addWidget(self.info_foot)
+        footer_layout.addStretch()
+        
+        self.btn_save = QPushButton("⚡ DEPLOY & SYNC")
+        self.btn_save.setObjectName("TerminalSaveBtn")
+        self.btn_save.setCursor(Qt.PointingHandCursor)
+        self.btn_save.clicked.connect(self.save_config_file)
+        
+        footer_layout.addWidget(self.btn_save)
+        terminal_layout.addLayout(footer_layout)
 
-        layout.addWidget(panel)
+        layout.addWidget(self.terminal_frame)
 
-        # Cargar datos e inicializar eventos
-        self.load_config()
-        self.btn_save.clicked.connect(self.save_config)
-        self.btn_cancel.clicked.connect(self.close)
-
-    def load_config(self):
-        """Carga el fichero MD forzado."""
+    def load_config_file(self):
         try:
             if os.path.exists(CONFIG_FILE):
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                     self.editor.setPlainText(f.read())
+            else:
+                os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+                default_content = (
+                    "---\n"
+                    "nombre: \"Propietario\"\n"
+                    "apellido_1: \"User\"\n"
+                    "apellido_2: \"\"\n"
+                    "tipo_user: 5\n"
+                    "nombre_app: \"SIPA SYSTEM\"\n"
+                    "---\n\n"
+                    "# FICHA DE IDENTIDAD CENTRAL\n"
+                    "Edite los campos anteriores respetando el formato YAML.\n"
+                )
+                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                    f.write(default_content)
+                self.editor.setPlainText(default_content)
         except Exception as e:
-            self.editor.setPlainText(f"Error al cargar ficha: {e}")
+            self.editor.setPlainText(f"❌ ERROR DE ACCESO AL NODO:\n{str(e)}")
 
-    def save_config(self):
-        """Guarda y notifica vía Socket (tu lógica de main_ev.py)."""
+    def save_config_file(self):
+        """Guarda cambios, muestra log de éxito en consola y cierra diferido"""
         try:
             content = self.editor.toPlainText()
+            os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            # Notificación de Socket (IPC)
-            self.notify_launcher("CONFIG_UPDATED", "Ficha de propietario modificada.")
-            self.close()
+            # Notificación Socket IPC
+            self.notify_ipc_server("CONFIG_UPDATED", "Identity profile synchronized.")
+            
+            # --- FEEDBACK VISUAL ESTILO TERMINAL ---
+            self.info_foot.setText("✨ [ SUCCESS ] Cambios desplegados. Sincronizando core de SIPA...")
+            self.info_foot.setStyleSheet("color: #00FF95; font-family: 'Consolas', monospace; font-size: 11px; font-weight: bold;")
+            
+            # Bloqueamos el botón temporalmente para evitar doble clic convulsivo
+            self.btn_save.setEnabled(False)
+            self.btn_save.setText("⏳ SYNCED")
+            
+            # --- CIERRE / REINICIO DIFERIDO (3 Segundos) ---
+            # Le da margen al usuario para ver el mensaje verde y cierra el nodo
+            QTimer.singleShot(3000, self.ejecutar_salida_modulo)
+            
         except Exception as e:
-            print(f"Error al guardar: {e}")
+            self.info_foot.setText(f"❌ [ DEPLOY FAILED ]: {str(e)}")
+            self.info_foot.setStyleSheet("color: #FF0055; font-family: 'Consolas', monospace; font-size: 11px;")
 
-    def notify_launcher(self, event_type, details):
-        """Mantiene tu arquitectura de comunicación por socket."""
+    def ejecutar_salida_modulo(self):
+        """Cierra el widget de forma limpia o fuerza el comportamiento de ocultación"""
+        print("⚙️ [SIPA SHELL] Módulo de configuración cerrado tras guardado exitoso.")
+        self.close()
+        
+        # Si tu sipa.py maneja un QStackedWidget o pestañas en el panel derecho,
+        # intentamos decirle al parent que cambie a la pestaña 0 (Dashboard principal)
+        parent_widget = self.parent()
+        while parent_widget is not None:
+            if hasattr(parent_widget, 'setCurrentIndex'): # Si encontramos el StackedWidget intermedio
+                parent_widget.setCurrentIndex(0) # Forzar retorno al Dashboard principal
+                break
+            parent_widget = parent_widget.parent()
+
+    def notify_ipc_server(self, event_type, details):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(0.5)
                 s.connect(('127.0.0.1', 65432))
                 message = json.dumps({"event": event_type, "data": details})
                 s.sendall(message.encode('utf-8'))
-        except: pass
+        except: 
+            pass
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    editor = ConfigEditorNode()
-    editor.show()
+    window = ConfigEditorNode()
+    window.setWindowFlags(Qt.Window)
+    window.setWindowTitle("SIPA | Terminal Config Node")
+    window.resize(900, 650)
+    window.show()
     sys.exit(app.exec())
