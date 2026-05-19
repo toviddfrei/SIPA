@@ -2,7 +2,7 @@
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: sipacur.py (VERSIÓN COMPLETA REESTRUCTURADA)
 # Módulo: SIPAcur (Dashboard IA Personal)
-# Versión: 3.9.2 | Fecha: 19/05/2026
+# Versión: 3.9.3 | Fecha: 19/05/2026
 # ==========================================================
 
 import os
@@ -257,7 +257,7 @@ class SIPAcurDashboard(QWidget):
 
         self.tabs.addTab(self.tab_presentacion, "🏠 INICIO")
 
-        # 2. PESTAÑA TABLA DE MÉTRICAS PEDAGÓGICAS (ORDEN CORREGIDO AQUÍ)
+        # 2. PESTAÑA TABLA DE MÉTRICAS PEDAGÓGICAS
         self.v_metricas = QTableView()
         self.px_metricas = QSortFilterProxyModel()
         self.v_metricas.setSortingEnabled(True)
@@ -308,11 +308,31 @@ class SIPAcurDashboard(QWidget):
         os.makedirs(os.path.dirname(self.ruta_json_metricas), exist_ok=True)
         
         if not os.path.exists(self.ruta_json_metricas):
+            # Inicialización extendida con el desglose total solicitado
             self.cache_metricas = [
-                {"id": "MET-001", "nombre": "Control del Ecosistema", "anterior": "58.0%", "anotaciones": "Porcentaje de archivos bajo control estricto del radar SIPA.", "verificado": True},
-                {"id": "MET-002", "nombre": "Estrés sobre SIPA (Inbox)", "anterior": "12.5%", "anotaciones": "Impacto de archivos acumulados en bandeja de entrada pendientes de procesar.", "verificado": True},
-                {"id": "MET-003", "nombre": "Actividad Semanal", "anterior": "14 mods", "anotaciones": "Volumen de escrituras y modificaciones detectadas en los últimos 7 días.", "verificado": False},
-                {"id": "MET-004", "nombre": "Gasto Estructural SIPA (Nueva)", "anterior": "0.0%", "anotaciones": "Porcentaje del peso total consumido exclusivamente por la estructura del sistema SIPA (sin datos).", "verificado": False}
+                # GESTIÓN GLOBAL
+                {"id": "MET-001", "nombre": "Control del Ecosistema", "anterior": "30.43%", "anotaciones": "Porcentaje de archivos bajo control estricto del radar SIPA.", "verificado": True},
+                {"id": "MET-002", "nombre": "Total Detectados", "anterior": "966", "anotaciones": "Recuento bruto de ficheros escaneados en el entorno.", "verificado": True},
+                {"id": "MET-003", "nombre": "En Seguimiento", "anterior": "294", "anotaciones": "Archivos indexados activos.", "verificado": True},
+                {"id": "MET-004", "nombre": "Pendientes", "anterior": "672", "anotaciones": "Archivos fuera del radar pendientes de clasificar.", "verificado": False},
+                
+                # MAPA DE CALOR
+                {"id": "MET-H01", "nombre": "Mapa Calor: Económica", "anterior": "5 | 0 mod.", "anotaciones": "Volumen / Esfuerzo área Económica", "verificado": False},
+                {"id": "MET-H02", "nombre": "Mapa Calor: Educación", "anterior": "12 | 2 mod.", "anotaciones": "Volumen / Esfuerzo área Educación", "verificado": False},
+                {"id": "MET-H03", "nombre": "Mapa Calor: Justicia", "anterior": "0 | 0 mod.", "anotaciones": "Volumen / Esfuerzo área Justicia", "verificado": False},
+                {"id": "MET-H04", "nombre": "Mapa Calor: Social", "anterior": "0 | 0 mod.", "anotaciones": "Volumen / Esfuerzo área Social", "verificado": False},
+                {"id": "MET-H05", "nombre": "Mapa Calor: Constructor", "anterior": "157 | 2 mod.", "anotaciones": "Volumen / Esfuerzo área Constructor", "verificado": False},
+                {"id": "MET-H06", "nombre": "Mapa Calor: Posts", "anterior": "42 | 0 mod.", "anotaciones": "Volumen / Esfuerzo área Posts", "verificado": False},
+                
+                # CARGA INTERNA
+                {"id": "MET-IN01", "nombre": "Ficheros en Inbox", "anterior": "17", "anotaciones": "Cola de entrada esperando etiquetado manual o automático.", "verificado": True},
+                {"id": "MET-IN02", "nombre": "Estrés sobre SIPA (Inbox)", "anterior": "5.78%", "anotaciones": "Impacto porcentual acumulado de la bandeja de entrada.", "verificado": True},
+                
+                # SALUD Y MANTENIMIENTO
+                {"id": "MET-ST01", "nombre": "Peso Digital", "anterior": "8.31 MB", "anotaciones": "Espacio ocupado por el repositorio analizado.", "verificado": True},
+                {"id": "MET-ST02", "nombre": "Ruido (Fantasmas)", "anterior": "25", "anotaciones": "Referencias corruptas o archivos rotos detectados.", "verificado": False},
+                {"id": "MET-ST03", "nombre": "Actividad (7d)", "anterior": "32 mods.", "anotaciones": "Volumen total de escrituras registradas en la última semana.", "verificado": False},
+                {"id": "MET-ST04", "nombre": "Gasto Estructural SIPA", "anterior": "0.0%", "anotaciones": "Peso puro consumido por la estructura del software.", "verificado": False}
             ]
             self._guardar_metricas_a_disco()
         else:
@@ -345,20 +365,46 @@ class SIPAcurDashboard(QWidget):
                 s = self.service_learn.calcular_auditoria_ecosistema(datos_mapa)
             except Exception as e: print(f"Error Auditoría: {e}")
 
-        # Cálculos de espacio en caliente
+        # Cálculos en caliente del sistema
         peso_sipa_total = self._obtener_peso_carpeta(self.base_dir)
         peso_data = self._obtener_peso_carpeta(os.path.join(self.base_dir, "data"))
         peso_sistema_puro = max(0, peso_sipa_total - peso_data)
         porcentaje_gasto_sipa = round((peso_sistema_puro / peso_sipa_total) * 100, 2) if peso_sipa_total > 0 else 0.0
 
-        # Mapeo sobre la caché de configuración
+        # Mapeo dinámico e inyección total a la lista de métricas persistentes
+        mc = s.get('mapa_calor', {})
         for metrica in self.cache_metricas:
+            # Globales
             if metrica["id"] == "MET-001": metrica["actual"] = f"{s['porcentaje_control']}%"
-            elif metrica["id"] == "MET-002": metrica["actual"] = f"{s['porcentaje_inbox_sipa']}%"
-            elif metrica["id"] == "MET-003": metrica["actual"] = f"{s['actividad_semanal']} mods"
-            elif metrica["id"] == "MET-004": metrica["actual"] = f"{porcentaje_gasto_sipa}%"
+            elif metrica["id"] == "MET-002": metrica["actual"] = str(s['recuento_global'])
+            elif metrica["id"] == "MET-003": metrica["actual"] = f"{s['recuento_sipa']} ({s['porcentaje_control']})"
+            elif metrica["id"] == "MET-004": metrica["actual"] = str(s['recuento_pendiente'])
+            
+            # Dinámicas del Mapa de Calor
+            elif metrica["id"] == "MET-H01":
+                v = mc.get('economica', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+            elif metrica["id"] == "MET-H02":
+                v = mc.get('educacion', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+            elif metrica["id"] == "MET-H03":
+                v = mc.get('justicia', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+            elif metrica["id"] == "MET-H04":
+                v = mc.get('social', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+            elif metrica["id"] == "MET-H05":
+                v = mc.get('constructor', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+            elif metrica["id"] == "MET-H06":
+                v = mc.get('posts', [0, 0]); metrica["actual"] = f"{v[0]} | {v[1]} mod."
+                
+            # Inbox
+            elif metrica["id"] == "MET-IN01": metrica["actual"] = str(s['inbox_cantidad'])
+            elif metrica["id"] == "MET-IN02": metrica["actual"] = f"{s['porcentaje_inbox_sipa']}%"
+            
+            # Salud
+            elif metrica["id"] == "MET-ST01": metrica["actual"] = f"{s['peso_total_mb']} MB"
+            elif metrica["id"] == "MET-ST02": metrica["actual"] = str(s['salud_fantasmas'])
+            elif metrica["id"] == "MET-ST03": metrica["actual"] = f"{s['actividad_semanal']} mods."
+            elif metrica["id"] == "MET-ST04": metrica["actual"] = f"{porcentaje_gasto_sipa}%"
 
-        # Cargar datos core estándar
+        # Cargar datos core estándar (Inbox y Seguimiento)
         datos_inbox = self.service.obtener_datos_inbox() if self.service else []
         self.model_inbox = GenericModel(datos_inbox, self.columnas_full)
         self.px_inbox.setSourceModel(self.model_inbox)
@@ -369,7 +415,7 @@ class SIPAcurDashboard(QWidget):
         self.px_seg.setSourceModel(self.model_seg)
         self.v_seg.setModel(self.px_seg)
 
-        # Enlace del modelo a la tabla de métricas
+        # Enlace y refresco total de la tabla de la pestaña MÈTRICAS
         self.model_metricas = GenericModel(self.cache_metricas, self.cols_metricas, editable=True)
         self.model_metricas.guardar_callback = self._guardar_metricas_a_disco
         self.px_metricas.setSourceModel(self.model_metricas)
@@ -378,7 +424,7 @@ class SIPAcurDashboard(QWidget):
         self.v_metricas.setItemDelegateForColumn(6, ComboDelegate(["✅ VERIFICADO", "❌ PENDIENTE"], self))
         self.v_metricas.resizeColumnsToContents()
 
-        # --- DISEÑO VISUAL ORIGINAL RESTAURADO AL 100% ---
+        # --- DISEÑO VISUAL ORIGINAL EN INICIO ---
         html = f"""
         <div style='font-family: "Segoe UI", sans-serif; font-size: 11px; color: #2c3e50;'>
             <div style='text-align: center; padding: 10px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 10px;'>
