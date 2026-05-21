@@ -2,12 +2,14 @@
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: scsipacur_learn_file.py
 # Módulo: SIPA_Learn_Service (Motor de Auditoría y Radar)
-# Versión: 4.1.0 | Fecha: 18/05/2026
+# Versión: 4.2.0 | Fecha: 20/05/2026
 # ==========================================================
 
 import os
 import json
 import getpass
+import re
+import shutil
 from datetime import datetime, timedelta
 
 class SIPA_Learn_Service:
@@ -50,10 +52,22 @@ class SIPA_Learn_Service:
             return set()
 
     def escanear_entorno(self):
-        """Realiza un escaneo recursivo total buscando activos .md."""
+        """Realiza un escaneo recursivo total buscando activos .md preservando metadatos históricos."""
         mapa_ficheros = []
         rutas_en_seguimiento = self._obtener_rutas_en_seguimiento()
         
+        # --- NUEVO: Cargar el mapa anterior para recuperar fechas históricas ---
+        fechas_historicas_mapa = {}
+        if os.path.exists(self.path_mapa):
+            try:
+                with open(self.path_mapa, "r", encoding="utf-8") as f:
+                    viejos_datos = json.load(f)
+                    # Mapeamos path_actual -> fecha_entrada (Clave unificada)
+                    fechas_historicas_mapa = {item["path_actual"]: item.get("fecha_entrada", "N/A") 
+                                              for item in viejos_datos if "path_actual" in item}
+            except: pass
+        # ------------------------------------------------------------------------------
+
         # Filtros de exclusión para optimizar el escaneo
         directorios_ignorar = {'.git', '.cache', 'node_modules', 'SIPAcur', 'venv', 'snap', 'anaconda3'}
         
@@ -68,16 +82,26 @@ class SIPA_Learn_Service:
                         info_disco = os.stat(path_completo)
                         es_seguido = path_completo in rutas_en_seguimiento
                         
+                        # --- UNIFICACIÓN INTEGRAL DE FECHAS EN EL MOTOR MAPA ---
+                        # 1. Por defecto, intentamos rescatar lo que ya tenía guardado el Mapa histórico
+                        fecha_entrada_real = fechas_historicas_mapa.get(path_completo, "N/A")
+                        
+                        # 2. Si el archivo está en seguimiento real del sistema, obligamos a unificar
+                        if es_seguido:
+                            # Si en el histórico del mapa no existía, le asignamos la fecha de hoy para el log visual
+                            if fecha_entrada_real == "N/A":
+                                fecha_entrada_real = datetime.now().strftime('%d/%m/%Y')
+                        
                         registro = {
                             "id_interno": str(contador_id),
                             "nombre": file,
                             "fecha_detectado": datetime.now().strftime('%d/%m/%Y'),
                             "estado": "Seguimiento" if es_seguido else "Pendiente",
-                            "anotacion": " ",
-                            "fecha_ingresado": "N/A", 
+                            "observaciones": " ", # Unificado con las columnas de interfaz
+                            "fecha_entrada": fecha_entrada_real, # <--- ¡CLAVE UNIFICADA PARA TU TABLA MAPA!
                             "path_actual": path_completo,
                             "tamaño_kb": str(round(info_disco.st_size / 1024, 2)),
-                            "ultima_modificacion": datetime.fromtimestamp(info_disco.st_mtime).strftime('%d/%m/%Y')
+                            "extensión": ".md"
                         }
                         mapa_ficheros.append(registro)
                         contador_id += 1
@@ -171,6 +195,7 @@ class SIPA_Learn_Service:
             except: pass
 
         ahora = datetime.now()
+        # Modificación para forzar guardado inicial si está vacío, o respetar la ventana de 6h
         if historial:
             ultima_fecha = datetime.strptime(historial[-1]["ts"], '%Y-%m-%d %H:%M')
             if ahora - ultima_fecha < timedelta(hours=6):
@@ -185,3 +210,111 @@ class SIPA_Learn_Service:
         
         with open(self.path_historial, "w", encoding="utf-8") as f:
             json.dump(historial[-500:], f, indent=4, ensure_ascii=False)
+
+    def calcular_flechas_tendencia(self, actual_str, anterior_str):
+        """Analiza cadenas complejas de métricas y devuelve un diccionario de tendencia con el 'azuquitar' formativo."""
+        def limpiar_a_flotante(cadena):
+            if not cadena or cadena == "N/A": return 0.0
+            # Extrae el primer número válido entero o decimal (ej: "30.58%" -> 30.58, "158 | 1 mod." -> 158.0)
+            match = re.search(r"[-+]?\d*\.\d+|\d+", str(cadena))
+            return float(match.group()) if match else 0.0
+
+        act_val = limpiar_a_flotante(actual_str)
+        ant_val = limpiar_a_flotante(anterior_str)
+
+        diferencia = act_val - ant_val
+        es_porcentaje = "%" in str(actual_str) or "%" in str(anterior_str)
+        es_mb = "MB" in str(actual_str) or "MB" in str(anterior_str)
+        es_modulo = "|" in str(actual_str)
+
+        if diferencia > 0:
+            simbolo = "▲"
+            estado = "UP"
+            signo = "+"
+        elif diferencia < 0:
+            simbolo = "▼"
+            estado = "DOWN"
+            signo = ""
+        else:
+            return {"simbolo": "▬", "txt": "est.", "estado": "STABLE"}
+
+        # Dar formato azuquitar con la etiqueta temporal simulada en base al último periodo
+        if es_porcentaje:
+            txt_diff = f"{signo}{round(diferencia, 2)}%"
+        elif es_mb:
+            txt_diff = f"{signo}{round(diferencia, 2)} MB"
+        elif es_modulo:
+            txt_diff = f"{signo}{int(diferencia)} mod"
+        else:
+            txt_diff = f"{signo}{int(diferencia)}"
+
+        return {"simbolo": simbolo, "txt": f"{txt_diff} (24h)", "estado": estado}
+
+    def ingresar_activos_a_inbox(self, lista_rutas):
+        """Mueve físicamente al Inbox, actualiza estado, path y fecha de ingreso en el Mapa."""
+        import shutil
+        ruta_inbox_destino = os.path.join(self.path_sipa, "data/inbox")
+        os.makedirs(ruta_inbox_destino, exist_ok=True)
+        
+        fecha_hoy = datetime.now().strftime('%d/%m/%Y')
+        
+        # Cargar el JSON del mapa para actualizar los estados en caliente
+        datos_mapa = []
+        if os.path.exists(self.path_mapa):
+            try:
+                with open(self.path_mapa, "r", encoding="utf-8") as f:
+                    datos_mapa = json.load(f)
+            except: pass
+
+        # Cargar rutas en seguimiento para evitar duplicados catastróficos
+        rutas_sipa_activas = self._obtener_rutas_en_seguimiento()
+        ficheros_en_inbox = set(os.listdir(ruta_inbox_destino)) if os.path.exists(ruta_inbox_destino) else set()
+        
+        reporte = {"procesados": 0, "errores": 0, "duplicados_omitidos": []}
+        
+        for ruta_origen in lista_rutas:
+            if not os.path.exists(ruta_origen):
+                reporte["errores"] += 1
+                continue
+                
+            nombre_fichero = os.path.basename(ruta_origen)
+            
+            # Control de Duplicados
+            if nombre_fichero in ficheros_en_inbox:
+                reporte["duplicados_omitidos"].append(f"{nombre_fichero} (Ya está en Inbox)")
+                continue
+            if ruta_origen in rutas_sipa_activas:
+                reporte["duplicados_omitidos"].append(f"{nombre_fichero} (Ya está en Seguimiento)")
+                continue
+
+            destino_final = os.path.join(ruta_inbox_destino, nombre_fichero)
+            
+            try:
+                # 1. Movimiento físico en el disco de Linux
+                shutil.move(ruta_origen, destino_final)
+                reporte["procesados"] += 1
+                
+                # 2. Actualizar el registro dentro del JSON del MAPA en caliente
+                for item in datos_mapa:
+                    if item.get("path_actual") == ruta_origen:
+                        item["estado"] = "Seguimiento"         # Cambia el estado
+                        item["path_actual"] = destino_final    # Actualiza el Path al Inbox
+                        
+                        # Asignación exacta según los nombres de tus columnas:
+                        item["fecha_ingresado"] = fecha_hoy    # Para que se pinte en la tabla MAPA 🗺️
+                        item["fecha_entrada"] = fecha_hoy      # Para la trazabilidad interna
+                        break
+                        
+            except (PermissionError, OSError) as e:
+                print(f"❌ Error en movimiento: {e}")
+                reporte["errores"] += 1
+        
+        # Guardar los estados actualizados en el JSON del mapa
+        if reporte["procesados"] > 0:
+            try:
+                with open(self.path_mapa, "w", encoding="utf-8") as f:
+                    json.dump(datos_mapa, f, indent=4, ensure_ascii=False)
+            except Exception as e:
+                print(f"Error guardando actualización de mapa: {e}")
+                
+        return reporte
