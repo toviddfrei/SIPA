@@ -1,26 +1,26 @@
 ---
-id_interno: 1,
-pendiente: "Si",
-revisado: "No",
-procesado: "No",
-registrado: "No",
-nombre_fichero_original: "template_bitacora.md",
-tipo: "Bitácora",
-path_actual: "/SIPA/core/templates-files/template_bitacora.md",
-unidad: "/:",
-estado: "Pendiente",
-hash: 0,
-revisado: "No",
-total_palabras: 0,
-palabras: "una,dos,tres,cuatro,cinco",
-frase: "La frase de más uso",
-path_publicado: "Ruta publicación",
-fecha_creación: "14/05/2026",
-fecha_entrada: "14/05/2026",
-fecha_publicación: " ",
-tamaño_kB: 0,
-extensión: " ",
-enlace: " ",
+id_interno: 1
+pendiente: "Si"
+revisado: "No"
+procesado: "No"
+registrado: "No"
+nombre_fichero_original: "template_bitacora.md"
+tipo: "Bitácora"
+path_actual: "/SIPA/core/templates-files/template_bitacora.md"
+unidad: "/:"
+estado: "Pendiente"
+hash: 0
+revisado: "No"
+total_palabras: 0
+palabras: "una,dos,tres,cuatro,cinco"
+frase: "La frase de más uso"
+path_publicado: "Ruta publicación"
+fecha_creación: "14/05/2026"
+fecha_entrada: "14/05/2026"
+fecha_publicación: " "
+tamaño_kB: 0
+extensión: " "
+enlace: " "
 SIPAcur_Sugerencia: "(Según las palabras y frases, comparar con las carpetas de knowledge y sugerir ubicación)"
 ---
 
