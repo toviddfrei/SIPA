@@ -2,7 +2,7 @@
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: sipa.py
 # Módulo: Core Dashboard / SPA Manager
-# Versión: 2.0.0.5 | Fecha: 17/05/2026
+# Versión: 2.0.0.6 | Fecha: 24/05/2026
 # Autor: Daniel Miñana Montero & Gemini
 # ==========================================================
 
@@ -14,7 +14,7 @@ import getpass
 import random
 from datetime import datetime
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                             QHBoxLayout, QGridLayout, QPushButton, QLabel, 
+                             QHBoxLayout, QGridLayout, QPushButton, QLabel, \
                              QFrame, QTextEdit, QStackedWidget)
 from PySide6.QtCore import Qt, QTimer
 
@@ -31,32 +31,47 @@ for ruta in [RUTA_SIPACUR, RUTA_SERVICIOS, CURRENT_DIR]:
     if ruta not in sys.path:
         sys.path.append(ruta)
 
-# 2. Importaciones dinámicas de módulos SIPA
+print("\n" + "="*60)
+print("             SISTEMA INTEGRAL SIPA - CORE SPA")
+print("="*60)
+
+# 2. Importaciones dinámicas de módulos gráficos SIPA (Mapeo de Trazabilidad)
 try:
     from sipacur import SIPAcurDashboard
+    print("🟢 Interfaz Módulo: 'SIPAcurDashboard' acoplada con éxito.")
 except ImportError:
+    print("⚠️  Componente Visual: 'SIPAcurDashboard' no disponible.")
     SIPAcurDashboard = None
 
 try:
     from ssipa_servicios import VistaServicios
+    print("🟢 Componente Core: 'VistaServicios' acoplado con éxito.")
 except ImportError:
+    print("⚠️  Componente Visual: 'VistaServicios' no disponible.")
     VistaServicios = None
 
 try:
     from ssipa_edit_markdown import SIPAMarkdownEditor
+    print("🟢 Componente Core: 'SIPAMarkdownEditor' acoplado con éxito.")
 except ImportError:
+    print("⚠️  Componente Visual: 'SIPAMarkdownEditor' no disponible.")
     SIPAMarkdownEditor = None
 
 try:
     from ssipa_identif import HuellaDigitalFrame
+    print("🟢 Componente Core: 'HuellaDigitalFrame' acoplado con éxito.")
 except ImportError:
+    print("⚠️  Componente Visual: 'HuellaDigitalFrame' no disponible.")
     HuellaDigitalFrame = None
 
-# Nueva importación real de Configuración Embebida
 try:
     from ssipa_config import ConfigEditorNode
+    print("🟢 Componente Core: 'ConfigEditorNode' acoplado con éxito.")
 except ImportError:
+    print("⚠️  Componente Visual: 'ConfigEditorNode' no disponible.")
     ConfigEditorNode = None
+
+print("="*60 + "\n")
 
 # Configuración de archivos de datos
 if not os.path.exists(ROOT_SIPA) or "SIPA" not in ROOT_SIPA:
@@ -67,7 +82,6 @@ else:
     SERVICE_CONFIG_PATH = os.path.join(ROOT_SIPA, "core/services/ssipa_config.py")
 
 QSS_FILE_PATH = os.path.join(CURRENT_DIR, "sipa_styles.qss")
-
 
 # ==========================================================
 # RESTRICCIÓN DE ACCESOS INTERNOS (Matriz de Niveles)

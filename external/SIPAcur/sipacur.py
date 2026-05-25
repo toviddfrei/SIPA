@@ -1,15 +1,19 @@
 # ==========================================================
 # PROYECTO SIPA - Sistema identificación personal autorizada
-# Archivo: sipacur.py (BLINDAJE DE PARSEO DE FECHAS)
+# Archivo: sipacur.py (INTERFAZ REFACTORIZADA Y LIMPIA)
 # Módulo: SIPAcur (Dashboard IA Personal)
-# Versión: 4.5.3 | Fecha: 21/05/2026
+# Versión: 4.6.0 | Fecha: 22/05/2026
 # ==========================================================
 
+# ==========================================================
+# BLOQUE DE IMPORTACIONES REFACTORIZADO
+# ==========================================================
 import os
+import sys
 import json
 import getpass
 import subprocess
-import sys
+
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableView, 
                                QLineEdit, QPushButton, QProgressBar, QTextEdit, 
                                QTabWidget, QLabel, QFrame, QGridLayout,
@@ -18,14 +22,39 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableView,
 from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QTimer
 from PySide6.QtGui import QColor
 
-# --- INTEGRACIÓN DEL SERVICIO CORE ---
+# --- INTEGRACIÓN DE RUTAS DEL ECOSISTEMA SYSTEM ---
+# 1. Enrutamiento hacia los servicios Core locales
 sys.path.append(os.path.join(os.path.dirname(__file__), 'core/services'))
+# 2. Enrutamiento hacia la biblioteca compartida superior (SIPA/external/utils)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+
+# --- CARGA CONTROLADA DE SERVICIOS INTERNOS ---
 try:
     from scsipacur_process_file import SIPAcurProcessorService
+except ImportError:
+    print("⚠️  Servicio Opcional: scsipacur_process_file no detectado (Asignado Standby).")
+    SIPAcurProcessorService = None
+
+try:
     from scsipacur_learn_file import SIPA_Learn_Service
 except ImportError:
-    SIPAcurProcessorService = None
+    print("⚠️  Servicio Opcional: scsipacur_learn_file (Motor IA) no detectado (Asignado Standby).")
     SIPA_Learn_Service = None
+
+try:
+    from scsipacur_store_file import SIPA_Store_Service
+except ImportError:
+    print("⚠️  Servicio Opcional: scsipacur_store_file (Motor Store) no detectado (Asignado Standby).")
+    SIPA_Store_Service = None
+    
+
+# --- CARGA CRÍTICA DE BIBLIOTECA COMPARTIDA ---
+try:
+    from sipa_utils import blindar_formatos_fecha, calcular_gasto_estructural, normalizar_cadena_insensible
+    print("🟢 Biblioteca 'sipa_utils' integrada con éxito.")
+except ImportError:
+    print("❌ Error Crítico: No se pudo cargar sipa_utils.py desde el directorio compartido.")
+    sys.exit(1)
 
 # ==========================================================
 # COMPONENTES DE INTERFAZ (Delegados y Modelos)
@@ -50,7 +79,7 @@ class GenericModel(QAbstractTableModel):
         super().__init__()
         self._data = dataset
         self.columnas = columnas
-        self.tipo_tabla = tipo_tabla  # "activos", "mapa" o "metricas"
+        self.tipo_tabla = tipo_tabla
         self.seleccionados = set()
         self.editable = editable
         self.servicio = servicio
@@ -62,7 +91,6 @@ class GenericModel(QAbstractTableModel):
         if not index.isValid() or not (0 <= index.row() < len(self._data)): return None
         row_data = self._data[index.row()]
         
-        # Columna 0: Selección Checkbox unificada para operar lotes
         if index.column() == 0:
             if role == Qt.CheckStateRole:
                 path = row_data.get('path_actual')
@@ -71,12 +99,10 @@ class GenericModel(QAbstractTableModel):
             
         if role in (Qt.DisplayRole, Qt.EditRole):
             col_key = self.columnas[index.column() - 1]
-            
             if col_key == "tendencia":
                 t_info = row_data.get("tendencia_calculada", {"simbolo": "▬", "txt": "est."})
                 return f"{t_info['simbolo']} {t_info['txt']}"
             
-            # --- TRADUCTOR TOLERANTE DE CLAVES INTERNAS ---
             val = " "
             if col_key == "observaciones":
                 val = row_data.get("observaciones", row_data.get("anotacion", " "))
@@ -89,22 +115,13 @@ class GenericModel(QAbstractTableModel):
                 return "✅ SÍ" if val else "❌ NO"
             return str(val)
         
-        # --- COLOR REACTIVO EXCLUSIVO Y SEGURO ---
         if role == Qt.ForegroundRole:
             col_key = self.columnas[index.column() - 1]
-            
-            # Enlace visual para Inbox y Seguimiento
-            if self.tipo_tabla == "activos" and col_key == "nombre_fichero_original":
-                return QColor("#2196F3")
-                
-            # Enlace visual para Tabla Mapa
-            if self.tipo_tabla == "mapa" and col_key == "nombre":
-                return QColor("#2196F3")
+            if self.tipo_tabla == "activos" and col_key == "nombre_fichero_original": return QColor("#2196F3")
+            if self.tipo_tabla == "mapa" and col_key == "nombre": return QColor("#2196F3")
 
-            # Resaltado verde en MAPA para estado y fecha de control
             if self.tipo_tabla == "mapa" and str(row_data.get("estado")).strip() == "Seguimiento":
-                if col_key in ["estado", "fecha_entrada", "fecha_ingresado"]:
-                    return QColor("#27ae60")
+                if col_key in ["estado", "fecha_entrada", "fecha_ingresado"]: return QColor("#27ae60")
 
             if col_key == "tendencia":
                 t_info = row_data.get("tendencia_calculada", {"estado": "STABLE"})
@@ -112,7 +129,6 @@ class GenericModel(QAbstractTableModel):
                 if t_info["estado"] == "DOWN": return QColor("#e74c3c")
                 return QColor("#7f8c8d")
 
-        # ALINEACIÓN INTELIGENTE QUIRÚRGICA
         if role == Qt.TextAlignmentRole:
             col_key = self.columnas[index.column() - 1]
             if self.tipo_tabla in ["activos", "mapa"] and col_key in ["nombre_fichero_original", "nombre", "path_actual", "observaciones", "frase", "path_publicado", "enlace"]:
@@ -131,14 +147,17 @@ class GenericModel(QAbstractTableModel):
         
         if self.editable and role == Qt.EditRole:
             col_key = self.columnas[index.column() - 1]
+            path_archivo = self._data[index.row()].get("path_actual")
             
             if col_key == "observaciones":
                 self._data[index.row()]["observaciones"] = value
                 self._data[index.row()]["anotacion"] = value
+                if self.tipo_tabla == "mapa" and self.servicio and hasattr(self.servicio, 'editar_mapa_observaciones'):
+                    self.servicio.editar_mapa_observaciones(path_archivo, value)
             else:
                 self._data[index.row()][col_key] = value
             
-            if self.servicio and hasattr(self.servicio, 'actualizar_item_completo'):
+            if self.tipo_tabla != "mapa" and self.servicio and hasattr(self.servicio, 'actualizar_item_completo'):
                 self.servicio.actualizar_item_completo(self._data[index.row()])
             elif hasattr(self, 'guardar_callback') and self.guardar_callback:
                 self.guardar_callback()
@@ -169,7 +188,7 @@ class GenericModel(QAbstractTableModel):
 class SIPAcurDashboard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("SIPAcur v4.5.3 - Ecosistema Profesional")
+        self.setWindowTitle("SIPAcur v4.6.0 - Ecosistema Profesional")
         self.resize(1200, 800)
         
         self.service = SIPAcurProcessorService() if SIPAcurProcessorService else None
@@ -194,7 +213,6 @@ class SIPAcurDashboard(QWidget):
 
         lyt_principal = QVBoxLayout(self)
         
-        # --- BARRA SUPERIOR DINÁMICA ---
         lyt_sup = QHBoxLayout()
         style_main_btns = "background-color: #2c3e50; color: white; font-weight: bold; border-radius: 4px; padding: 5px 15px;"
         
@@ -240,7 +258,6 @@ class SIPAcurDashboard(QWidget):
         lyt_sup.addWidget(self.btn_f_all)
         lyt_principal.addLayout(lyt_sup)
 
-        # --- Tabs ---
         self.tabs = QTabWidget()
         lyt_principal.addWidget(self.tabs)
         self._setup_tabs()
@@ -260,7 +277,6 @@ class SIPAcurDashboard(QWidget):
         QTimer.singleShot(500, self.actualizar_todo)
 
     def _setup_tabs(self):
-        # 1. PESTAÑA PRESENTACIÓN
         self.tab_presentacion = QWidget()
         lyt_grid = QGridLayout(self.tab_presentacion)
         
@@ -274,7 +290,7 @@ class SIPAcurDashboard(QWidget):
         self.lbl_icono.setStyleSheet("font-size: 80px;")
         self.lbl_icono.setAlignment(Qt.AlignCenter)
         lyt_logo.addWidget(self.lbl_icono)
-        lyt_logo.addWidget(QLabel("<b>SIPAcur v4.5.3</b><br>Identificación Personal Autorizada", alignment=Qt.AlignCenter))
+        lyt_logo.addWidget(QLabel("<b>SIPAcur v4.6.0</b><br>Identificación Personal Autorizada", alignment=Qt.AlignCenter))
         lyt_grid.addWidget(self.frame_logo, 0, 0, 2, 1)
 
         self.frame_prompt = QFrame()
@@ -302,7 +318,6 @@ class SIPAcurDashboard(QWidget):
 
         self.tabs.addTab(self.tab_presentacion, "🏠 INICIO")
 
-        # 2. PESTAÑA TABLA DE MÉTRICAS PEDAGÓGICAS
         self.v_metricas = QTableView()
         self.px_metricas = QSortFilterProxyModel()
         self.v_metricas.setSortingEnabled(True)
@@ -311,7 +326,6 @@ class SIPAcurDashboard(QWidget):
         self.tabs.addTab(self.v_metricas, "📈 MÈTRICAS")
         self.px_metricas.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
-        # 3. PESTAÑA MAPA
         self.v_mapa = QTableView()
         self.px_mapa = QSortFilterProxyModel()
         self.v_mapa.setSortingEnabled(True)
@@ -321,7 +335,6 @@ class SIPAcurDashboard(QWidget):
         self.tabs.addTab(self.v_mapa, "🗺️ MAPA")
         self.px_mapa.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
-        # 4. PESTAÑA INBOX
         self.v_inbox = QTableView()
         self.px_inbox = QSortFilterProxyModel()
         self.v_inbox.setSortingEnabled(True)
@@ -330,7 +343,6 @@ class SIPAcurDashboard(QWidget):
         self.v_inbox.doubleClicked.connect(self.abrir_fichero_default)
         self.tabs.addTab(self.v_inbox, "📥 INBOX")
 
-        # 5. PESTAÑA SEGUIMIENTO
         self.v_seg = QTableView()
         self.px_seg = QSortFilterProxyModel()
         self.v_seg.setSortingEnabled(True)
@@ -338,18 +350,6 @@ class SIPAcurDashboard(QWidget):
         self.v_seg.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.v_seg.doubleClicked.connect(self.abrir_fichero_default)
         self.tabs.addTab(self.v_seg, "📊 SEGUIMIENTO")
-
-    def _obtener_peso_carpeta(self, ruta):
-        total = 0
-        if os.path.exists(ruta):
-            if os.path.isdir(ruta):
-                for dirpath, dirnames, filenames in os.walk(ruta):
-                    for f in filenames:
-                        fp = os.path.join(dirpath, f)
-                        if os.path.exists(fp): total += os.path.getsize(fp)
-            else:
-                total = os.path.getsize(ruta)
-        return total / (1024 * 1024)
 
     def _cargar_metricas_desde_disco(self):
         os.makedirs(os.path.dirname(self.ruta_json_metricas), exist_ok=True)
@@ -403,59 +403,23 @@ class SIPAcurDashboard(QWidget):
             try:
                 datos_mapa = self.service_learn.escanear_entorno()
                 
-                # --- ESCUDO INTERCEPTOR DE FORMATO DE FECHAS (ANTI-CRASH) ---
-                for item in datos_mapa:
-                    # 1. Forzar presencia de claves críticas
-                    if "fecha_entrada" not in item or str(item.get("fecha_entrada")).strip() in ["", "None", "N/A"]:
-                        item["fecha_entrada"] = "01/01/1990"
-                    
-                    if "ultima_modificacion" not in item or str(item.get("ultima_modificacion")).strip() in ["", "None", "N/A"]:
-                        item["ultima_modificacion"] = item["fecha_entrada"]
-                    
-                    # 2. Corregir formato si el core exige barra y viene con guiones
-                    if "-" in str(item["fecha_entrada"]):
-                        try:
-                            partes = item["fecha_entrada"].split(" ")[0].split("-")
-                            if len(partes) == 3:
-                                if len(partes[0]) == 4: # YYYY-MM-DD
-                                    item["fecha_entrada"] = f"{partes[2]}/{partes[1]}/{partes[0]}"
-                                else: # DD-MM-YYYY
-                                    item["fecha_entrada"] = f"{partes[0]}/{partes[1]}/{partes[2]}"
-                        except:
-                            item["fecha_entrada"] = "01/01/1990"
-                            
-                    if "-" in str(item["ultima_modificacion"]):
-                        try:
-                            partes = item["ultima_modificacion"].split(" ")[0].split("-")
-                            if len(partes) == 3:
-                                if len(partes[0]) == 4:
-                                    item["ultima_modificacion"] = f"{partes[2]}/{partes[1]}/{partes[0]}"
-                                else:
-                                    item["ultima_modificacion"] = f"{partes[0]}/{partes[1]}/{partes[2]}"
-                        except:
-                            item["ultima_modificacion"] = item["fecha_entrada"]
+                # --- LLAMADA AL BLINDAJE DE UTILS ---
+                datos_mapa = blindar_formatos_fecha(datos_mapa)
 
-                self.model_mapa = GenericModel(datos_mapa, self.cols_mapa, tipo_tabla="mapa", editable=True) 
+                self.model_mapa = GenericModel(datos_mapa, self.cols_mapa, tipo_tabla="mapa", editable=True, servicio=self.service_learn) 
                 self.px_mapa.setSourceModel(self.model_mapa)
                 self.v_mapa.setModel(self.px_mapa)
                 
-                # Ejecución protegida
                 s = self.service_learn.calcular_auditoria_ecosistema(datos_mapa)
             except Exception as e: 
                 print(f"Error Auditoría: {e}")
 
-        peso_sipa_total = self._obtener_peso_carpeta(self.base_dir)
-        peso_data = self._obtener_peso_carpeta(os.path.join(self.base_dir, "data"))
-        peso_sistema_puro = max(0, peso_sipa_total - peso_data)
-        porcentaje_gasto_sipa = round((peso_sistema_puro / peso_sipa_total) * 100, 2) if peso_sipa_total > 0 else 0.0
+        # --- LLAMADA AL CÁLCULO DE GASTO ESTRUCTURAL DE UTILS ---
+        porcentaje_gasto_sipa = calcular_gasto_estructural(self.base_dir)
 
-        # --- EXTRACTOR DE MAPA DE CALOR INSENSIBLE ---
+        # --- MAPA DE CALOR SEGURO E INSENSIBLE (Llamando a sipa_utils) ---
         mc = s.get('mapa_calor', {}) if s else {}
-        def normalizar_cadena(txt):
-            import unicodedata
-            return "".join(c for c in unicodedata.normalize('NFD', txt.lower()) if unicodedata.category(c) != 'Mn')
-        
-        mc_limpio = {normalizar_cadena(k): v for k, v in mc.items()}
+        mc_limpio = {normalizar_cadena_insensible(k): v for k, v in mc.items()}
 
         for metrica in self.cache_metricas:
             if not s: break
@@ -511,7 +475,6 @@ class SIPAcurDashboard(QWidget):
         for tabla in [self.v_mapa, self.v_inbox, self.v_seg, self.v_metricas]:
             tabla.resizeColumnsToContents()
 
-        # HTML renderizado
         html = f"""
         <div style='font-family: "Segoe UI", sans-serif; font-size: 11px; color: #2c3e50;'>
             <div style='text-align: center; padding: 10px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 10px;'>
@@ -559,10 +522,34 @@ class SIPAcurDashboard(QWidget):
         """
         self.txt_evolucion.setHtml(html)
 
+        # ==========================================================
+        # REPORTE DE SERVICIOS ACTIVOS (PATRÓN ESPEJO TRADUCIDO)
+        # ==========================================================
+        
+        # 1. Latido del Motor de Auditoría / Radar IA (Learn - Sigue en inglés)
         if self.service_learn:
             info = self.service_learn.get_ai_status()
             self.lbl_status_ia.setText(f"● {info['engine']}: {info['status']} | UP: {info['uptime']}")
             self.lbl_status_ia.setStyleSheet("color: #2ecc71; font-weight: bold; font-size: 11px;")
+
+        # 2. Latido del Motor de Almacenamiento / Datos (Store - 100% Emparejado en Español)
+        if hasattr(self, 'store_service') and self.store_service:
+            try:
+                # Llamamos al método nativo real en español
+                info_store = self.store_service.obtener_salud_servicio()
+                
+                # Calculamos el formateo de uptime de segundos brutos a H:MM:SS de forma segura en la UI
+                segundos_totales = info_store.get('uptime_segundos', 0)
+                horas = segundos_totales // 3600
+                minutos = (segundos_totales % 3600) // 60
+                segundos = segundos_totales % 60
+                uptime_formateado = f"{horas}:{minutos:02d}:{segundos:02d}"
+                
+                # Mapeamos las claves en español: 'servicio' y 'estado'
+                self.lbl_status_store.setText(f"● {info_store['servicio']}: {info_store['estado']} | UP: {uptime_formateado}")
+                self.lbl_status_store.setStyleSheet("color: #2ecc71; font-weight: bold; font-size: 11px;")
+            except Exception as e:
+                print(f"⚠️ Error en Dashboard al leer salud de Store: {e}")
 
     def aplicar_filtro_mapa(self, texto):
         self.search_bar.clear()
@@ -576,8 +563,7 @@ class SIPAcurDashboard(QWidget):
 
     def abrir_fichero_default(self, index):
         try:
-            if not index.isValid() or index.column() != 2: 
-                return
+            if not index.isValid() or index.column() != 2: return
 
             proxy_model = index.model()
             if isinstance(proxy_model, QSortFilterProxyModel):
@@ -593,10 +579,8 @@ class SIPAcurDashboard(QWidget):
             
             if ruta_nota and os.path.exists(ruta_nota):
                 print(f"🚀 [SIPA SYSTEM] Abriendo activo por defecto: {ruta_nota}")
-                if sys.platform == "win32": 
-                    os.startfile(ruta_nota)
-                else: 
-                    subprocess.Popen(["xdg-open", ruta_nota])
+                if sys.platform == "win32": os.startfile(ruta_nota)
+                else: subprocess.Popen(["xdg-open", ruta_nota])
             else:
                 QMessageBox.warning(self, "Error de Ubicación", f"El archivo físico no reside en esa ruta:\n{ruta_nota}")
         except Exception as e: 

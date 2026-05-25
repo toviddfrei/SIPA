@@ -57,14 +57,20 @@ class SIPA_Learn_Service:
         rutas_en_seguimiento = self._obtener_rutas_en_seguimiento()
         
         # --- NUEVO: Cargar el mapa anterior para recuperar fechas históricas ---
-        fechas_historicas_mapa = {}
+        # --- NUEVO: Cargar el mapa anterior para recuperar fechas históricas y observaciones ---
+        datos_historicos_mapa = {}
         if os.path.exists(self.path_mapa):
             try:
                 with open(self.path_mapa, "r", encoding="utf-8") as f:
                     viejos_datos = json.load(f)
-                    # Mapeamos path_actual -> fecha_entrada (Clave unificada)
-                    fechas_historicas_mapa = {item["path_actual"]: item.get("fecha_entrada", "N/A") 
-                                              for item in viejos_datos if "path_actual" in item}
+                    # Mapeamos path_actual -> (fecha_entrada, observaciones)
+                    datos_historicos_mapa = {
+                        item["path_actual"]: {
+                            "fecha": item.get("fecha_entrada", "N/A"),
+                            "observaciones": item.get("observaciones", " ")
+                        }
+                        for item in viejos_datos if "path_actual" in item
+                    }
             except: pass
         # ------------------------------------------------------------------------------
 
@@ -82,9 +88,11 @@ class SIPA_Learn_Service:
                         info_disco = os.stat(path_completo)
                         es_seguido = path_completo in rutas_en_seguimiento
                         
-                        # --- UNIFICACIÓN INTEGRAL DE FECHAS EN EL MOTOR MAPA ---
-                        # 1. Por defecto, intentamos rescatar lo que ya tenía guardado el Mapa histórico
-                        fecha_entrada_real = fechas_historicas_mapa.get(path_completo, "N/A")
+                        # --- UNIFICACIÓN INTEGRAL DE FECHAS Y OBSERVACIONES EN EL MOTOR MAPA ---
+                        # 1. Recuperamos los datos históricos (fecha y observaciones) de nuestro nuevo diccionario estructurado
+                        historial_archivo = datos_historicos_mapa.get(path_completo, {})
+                        fecha_entrada_real = historial_archivo.get("fecha", "N/A")
+                        observacion_guardada = historial_archivo.get("observaciones", " ") # <-- Rescatamos tu anotación manual
                         
                         # 2. Si el archivo está en seguimiento real del sistema, obligamos a unificar
                         if es_seguido:
@@ -97,8 +105,8 @@ class SIPA_Learn_Service:
                             "nombre": file,
                             "fecha_detectado": datetime.now().strftime('%d/%m/%Y'),
                             "estado": "Seguimiento" if es_seguido else "Pendiente",
-                            "observaciones": " ", # Unificado con las columnas de interfaz
-                            "fecha_entrada": fecha_entrada_real, # <--- ¡CLAVE UNIFICADA PARA TU TABLA MAPA!
+                            "observaciones": observacion_guardada, # <--- ¡AHORA ESTÁ BLINDADA Y PROTEGIDA!
+                            "fecha_entrada": fecha_entrada_real, # <--- CLAVE UNIFICADA PARA TU TABLA MAPA
                             "path_actual": path_completo,
                             "tamaño_kb": str(round(info_disco.st_size / 1024, 2)),
                             "extensión": ".md"
@@ -318,3 +326,35 @@ class SIPA_Learn_Service:
                 print(f"Error guardando actualización de mapa: {e}")
                 
         return reporte
+
+    def editar_mapa_observaciones(self, path_archivo, nueva_observacion):
+        """Gestiona las observaciones creadas en los registros persistentes en sipa-activos.json"""
+        
+        # COMPROBAMOS EXISTENCIA DE FICHERO
+        try:
+            if not os.path.exists(self.path_mapa):
+                return False
+        except Exception as e:
+            print(f"❌ Error al verificar el archivo del MAPA: {e}")
+            return False
+
+        # ABRIMOS FICHERO EN MODO LECTURA
+        try:
+            with open(self.path_mapa, "r", encoding="utf-8") as f:
+                datos_mapa = json.load(f)
+        except Exception as e:
+            print(f"❌ Error al leer el contenido del MAPA: {e}")
+            return False
+        # RECORREMOS CON UN BUCLE BUSCANDO EL REGISTRO CORRECTO
+        for item in datos_mapa:
+            if item.get("path_actual") == path_archivo:
+                item["observaciones"] = nueva_observacion
+                break
+        # ABRIMOS EL FICHERO EN MODO ESCRITURA Y LO CERRAMOS
+        try:
+            with open(self.path_mapa, "w", encoding="utf-8") as f:
+                json.dump(datos_mapa, f, indent=4, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"❌ Error al escribir el archivo del mapa: {e}")
+            return False
