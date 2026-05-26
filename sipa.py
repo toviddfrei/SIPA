@@ -18,18 +18,60 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QFrame, QTextEdit, QStackedWidget)
 from PySide6.QtCore import Qt, QTimer
 
-# --- CONFIGURACIÓN DE RUTAS ---
-USER_NAME = getpass.getuser()
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_SIPA = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
+# =================================================================
+# FASE 0: IGNICIÓN DEL GATEWAY SEGURIDAD (RDDR, CAJA NEGRA Y FORENSE)
+# =================================================================
+import sys
+import os
 
-# 1. Inyectar rutas de módulos externos y servicios
-RUTA_SIPACUR = os.path.join(CURRENT_DIR, "external", "SIPAcur")
-RUTA_SERVICIOS = os.path.join(CURRENT_DIR, "core", "services")
+# Puente temporal para acoplar el Router transversal en el milisegundo cero
+RUTA_BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "core", "services")
+if RUTA_BOOTSTRAP not in sys.path:
+    sys.path.insert(0, RUTA_BOOTSTRAP)
 
-for ruta in [RUTA_SIPACUR, RUTA_SERVICIOS, CURRENT_DIR]:
-    if ruta not in sys.path:
-        sys.path.append(ruta)
+try:
+    from ssipa_router import SIPARouterGateway
+    # 1. El Router calcula la raíz en RAM, monta directorios y arranca basicConfig
+    ROOT_SIPA = SIPARouterGateway.inicializar_entorno()
+except ImportError as e:
+    print(f"❌ CRITICAL: No se pudo acoplar el Gateway de Enrutamiento: {e}")
+    sys.exit(1)
+
+# 2. IGNICIÓN DEL SISTEMA DE LOGS AVANZADO (Tus archivos subidos)
+try:
+    from config_loggers import setup_logger, setup_advanced_logging
+    # Encendemos el ListHandler en memoria de inmediato para capturar todo el arranque
+    logger_estructura, log_messages = setup_logger()
+    
+    # NOTA: En cuanto se inicialice tu `DatabaseManager` más adelante en el código, 
+    # ejecutarás: setup_advanced_logging(db_manager, session_id)
+except Exception as e:
+    print(f"⚠️ Alerta Core: Sistema de logs avanzado en standby: {e}")
+
+# 3. VERIFICACIÓN Y COMPROBACIÓN DE ENTRAÑAS (Tus nuevos servicios)
+try:
+    # A. Llamamos a tu Guardián de Infraestructura unificado
+    from external.SIPAbap.core.services.sbsipabap_env import EnvironmentManager
+    guardian = EnvironmentManager()
+    if not guardian.check_all():
+        logger_estructura.critical("Fallo catastrófico en la certificación de infraestructura FHS.")
+        sys.exit(1)
+        
+    # B. Despertamos a la Sonda Forense Sentinel sobre este propio archivo launcher
+    from external.SIPAbap.core.services.sbsipabap_sentinel import sonda
+    if not sonda.ejecutar_auditoria(__file__):
+        logger_estructura.critical("Bloqueo preventivo: Firma digital o árbol AST corrupto.")
+        sys.exit(1)
+
+except ImportError as e:
+    print(f"⚠️ Nota de desarrollo: Motores SIPAbap en proceso de acople: {e}")
+# =================================================================
+# CONFIGURACIÓN DE RUTAS CENTRALIZADA (VÍA GATEWAY)
+# =================================================================
+# El Router nos resuelve los caminos absolutos directamente desde la RAM
+RUTA_SIPACUR   = SIPARouterGateway.obtener_ruta("external", "SIPAcur")
+RUTA_SERVICIOS = SIPARouterGateway.obtener_ruta("core", "services")
+# =================================================================
 
 print("\n" + "="*60)
 print("             SISTEMA INTEGRAL SIPA - CORE SPA")
@@ -81,7 +123,12 @@ else:
     CONFIG_FILE = os.path.join(ROOT_SIPA, "data", "archive", "template_propietario.md")
     SERVICE_CONFIG_PATH = os.path.join(ROOT_SIPA, "core/services/ssipa_config.py")
 
-QSS_FILE_PATH = os.path.join(CURRENT_DIR, "sipa_styles.qss")
+# =================================================================
+# CARGA DE ESTILOS SEGUNDO NIVEL (VÍA GATEWAY)
+# =================================================================
+# El Router nos resuelve el camino al QSS directamente desde la raíz
+QSS_FILE_PATH = SIPARouterGateway.obtener_ruta("sipa_styles.qss")
+# =================================================================
 
 # ==========================================================
 # RESTRICCIÓN DE ACCESOS INTERNOS (Matriz de Niveles)

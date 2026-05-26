@@ -1,15 +1,10 @@
-# ==========================================================
-# PROYECTO SIPA - Sistema de Inteligencia de Perfil Automatizado
-# Archivo: environment_manager.py
-# Módulo: SIPAbap (Auditoría de Infraestructura)
-# Versión: 0.2.5 | Fecha: 06/01/2026
-# Autor: Daniel Miñana & Gemini
-# ----------------------------------------------------------
-# DESCRIPCIÓN: Motor de validación y AUTORREPARACIÓN. 
-# Certifica la integridad de directorios y archivos vitales.
-# Si faltan elementos de datos o testigos, los genera para
-# garantizar la continuidad del arranque (Ignición).
-# ==========================================================
+# =====================================================================
+# MÓDULO: sbsipabap_env.py (v0.2.5 - Core Infr)
+# UBICACIÓN: /home/toviddfrei/SIPA/external/SIPAbap/core/services/
+# DESCRIPCIÓN: Absorción exacta de tu motor environment_manager.py.
+#              Certifica la integridad de directorios y archivos vitales.
+# AUTOR: Daniel Miñana Montero & Gemini
+# =====================================================================
 
 import os
 import logging
@@ -48,7 +43,7 @@ class EnvironmentManager:
         try:
             self.logger.info("SIPAbap: Iniciando auditoría detallada por manifiesto...")
             
-            # 1. VALIDACIÓN Y REPARACIÓN DE DIRECTORIOS
+            # 1. VALIDACIÓN Y REPARACIÓN DE DIRECTORIOS (Tu lógica optimizada)
             all_dirs = list(set(CRITICAL_DIRS + STRUCTURE_DIRS))
             for directory in all_dirs:
                 if not os.path.exists(directory):
@@ -64,7 +59,7 @@ class EnvironmentManager:
                 f_str = str(file_path)
                 
                 if os.path.isfile(file_path):
-                    self.logger.debug(f"Fichero vital certificado: {f_str}")
+                    self.logger.debug(f"Fichero vital certified: {f_str}")
                 else:
                     # CASO A: Ficheros Testigo o Metadatos (Autorreparables)
                     if ".sipa_root" in f_str or "identity.json" in f_str:
@@ -95,7 +90,3 @@ class EnvironmentManager:
         except Exception as e:
             self.logger.error(f"Error sistémico en validación: {e}")
             return False
-
-# ==========================================================
-# FIRMADO: Daniel Miñana | SIPA v0.2.5 - Resilience Guard
-# ==========================================================

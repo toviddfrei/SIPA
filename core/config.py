@@ -73,7 +73,7 @@ STRUCTURE_DIRS = [
 ]
 
 # =====================================================================
-# BLOQUE 3: PERSISTENCIA Y FICHEROS CRÍTICOS
+# BLOQUE 3: PERSISTENCIA Y FICHEROS CRÍTICOS (Actualizado con tu ruta real)
 # =====================================================================
 DB_NAME = "sistema.db"
 DB_PATH = DIR_DB / DB_NAME
@@ -85,11 +85,12 @@ IDENTITY_FILE    = DIR_DATA / "identity.json"
 
 # Listas de verificación de ficheros para SIPAbap
 CRITICAL_FILES = [
-    BASE_DIR / "main.py",
-    DIR_CORE / "config.py",
-    SIPA_ROOT_ANCHOR,
-    IDENTITY_FILE,
-    DB_PATH
+    BASE_DIR / "sipa.py",          # Vigilamos el punto de entrada único
+    DIR_CORE / "config.py",        # La SSoT
+    SIPA_ROOT_ANCHOR,              # El ancla física
+    IDENTITY_FILE,                 # Identidad del propietario
+    DB_PATH,                       # El búnker SQLite
+    BASE_DIR / "external" / "SIPAbap" / "core" / "services" / "sbsipabap_sentinel.py" # 🎯 Tu ruta exacta
 ]
 
 # =====================================================================
