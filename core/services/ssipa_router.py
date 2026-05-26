@@ -110,26 +110,26 @@ class SIPARouterGateway:
     def _generar_artefacto_auditoria(cls, raiz_resuelta):
         """Genera el informe pedagógico en Markdown para la Mochila de Auditoría."""
         ruta_informe = os.path.join(raiz_resuelta, cls.ARTEFACTO_LOG_MD)
-        
+
         informe_md = f"""# 🛡️ INFORME DE AUDITORÍA DE ENRUTAMIENTO (RDDR)
-                        *Generado automáticamente por el Core de Seguridad del Ecosistema SIPA*
+*Generado automáticamente por el Core de Seguridad del Ecosistema SIPA*
 
-                        ## 📝 Datos de la Sesión
-                        - **Fecha/Hora:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                        - **Aislamiento de Entorno:** 🟢 RAM SECURE INJECTION (`os.environ`)
-                        - **Caja Negra:** ACTIVA (`SIPA_Master_CajaNegra.log`)
+## 📝 Datos de la Sesión
+- **Fecha/Hora:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- **Aislamiento de Entorno:** 🟢 RAM SECURE INJECTION (`os.environ`)
+- **Caja Negra:** ACTIVA (`SIPA_Master_CajaNegra.log`)
 
-                        ## 🔍 Análisis de Rutas en Caliente
-                        El Gateway ha tomado el control de los caminos para evitar vectores de ataque *Python Path Hijacking*.
+## 🔍 Análisis de Rutas en Caliente
+El Gateway ha tomado el control de los caminos para evitar vectores de ataque *Python Path Hijacking*.
 
-                        | Componente | Tipo de Ruta Resuelta en RAM | Estado |
-                        |------------|------------------------------|--------|
-                        | **SIPA_ROOT** | `{raiz_resuelta}` | INTEGRADO |
-                        | **Mochila RDDR** | Transparente / Auditable | COMPLETO |
+| Componente | Tipo de Ruta Resuelta en RAM | Estado |
+|------------|------------------------------|--------|
+| **SIPA_ROOT** | `{raiz_resuelta}` | INTEGRADO |
+| **Mochila RDDR** | Transparente / Auditable | COMPLETO |
 
-                        ---
-                        *Evidencia generada para cumplimiento normativo y trazabilidad ética del código.*
-                        """
+---
+*Evidencia generada para cumplimiento normativo y trazabilidad ética del código.*
+"""
         try:
             with open(ruta_informe, "w", encoding="utf-8") as f:
                 f.write(informe_md)
