@@ -1,107 +1,144 @@
-/* sipa_styles.qss */
+/* ==========================================================
+   PROYECTO SIPA - Sistema identificación personal autorizada
+   Archivo: sipa_styles.qss
+   Estilo: Suite Horizontal Unificada (Cyber-Auditor Dark)
+   ========================================================== */
 
-/* --- CONFIGURACIÓN ESTRUCTURAL --- */
+/* --- CONFIGURACIÓN ESTRUCTURAL GENERAL --- */
 QMainWindow { 
     background-color: #121212; 
 }
 
-#Sidebar { 
-    background-color: #1A1A1A; 
-    border-right: 1px solid #2D2D2D; 
+QWidget {
+    background-color: #121212;
+    color: #E0E0E0; /* Texto claro global por defecto para evitar textos negros */
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
 }
 
+/* --- CONTENEDORES Y TARJETAS --- */
 #Card { 
-    background-color: #242424; 
-    border: 1px solid #333333; 
-    border-radius: 12px; 
+    background-color: #1E1E1E; 
+    border: 1px solid #2D2D2D; 
+    border-radius: 8px; 
 }
 
 /* --- ELEMENTOS DE TEXTO E IDENTIDAD --- */
 QLabel { 
     color: #E0E0E0; 
+    background: transparent;
 }
 
 #AppTitle {
-    font-size: 26px; 
+    font-size: 22px; 
     font-weight: bold;
+    color: #FFFFFF;
+    margin-bottom: 5px;
 }
 
 #CardTitle {
     font-size: 13px; 
-    color: #3A86FF;
+    font-weight: bold;
+    color: #00FF95; /* Verde cibernético para destacar títulos de tarjetas */
 }
 
-#UserName {
-    font-size: 16px; 
-    font-weight: bold; 
-    color: #00FF95;
-}
-
-#UserRange {
-    color: #666666; 
-    font-size: 11px;
-}
-
-#SidebarHeader {
-    color: #888888; 
-    font-size: 10px;
-}
-
-/* --- ENTRADAS DE TEXTO Y CONSOLA --- */
-#Console {
-    background-color: #050505;
-    color: #00FF95;
-    font-family: 'Consolas', monospace;
-    font-size: 11px;
-    border: 1px solid #222222;
-}
-
-/* --- BOTONES (COMPORTAMIENTO BASE Y HOVER) --- */
-QPushButton {
-    background-color: #333333;
+/* --- COMPORTAMIENTO DE TABLAS RELEVANTE (Módulos de Auditoría/Servicios) --- */
+QTableWidget, QTableView {
+    background-color: #1A1A1A;
     color: #E0E0E0;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
+    gridline-color: #2D2D2D;
+    border: 1px solid #2D2D2D;
+    alternate-background-color: #222222; /* Control estricto de filas alternas oscuras */
+    selection-background-color: #00FF95;
+    selection-color: #121212;
+}
+
+QHeaderView::section {
+    background-color: #262626;
+    color: #00FF95;
+    padding: 5px;
+    border: 1px solid #1A1A1A;
+    font-weight: bold;
+}
+
+/* --- BOTONES BASE (COMPORTAMIENTO GENERAL) --- */
+QPushButton {
+    background-color: #262626;
+    color: #E0E0E0;
+    border: 1px solid #333333;
+    padding: 6px 14px;
+    border-radius: 4px;
     font-weight: bold;
 }
 
 QPushButton:hover { 
-    background-color: #3A86FF; 
+    background-color: #333333;
+    color: #FFFFFF;
+    border: 1px solid #00FF95;
 }
 
-/* --- BOTONES CON IDENTIFICADORES ESPECIALES --- */
-#BtnSidebar {
-    text-align: left; 
-    background: transparent; 
-    font-size: 13px;
-}
-#BtnSidebar:hover {
-    background-color: #242424;
+QPushButton:pressed {
+    background-color: #1A1A1A;
 }
 
-#BtnSidebarDisabled {
-    text-align: left; 
-    background: transparent; 
-    color: #444444;
+/* --- CONTROLES ESPECÍFICOS DE LAS PESTAÑAS (TOP NAVBAR) --- */
+/* Estilo base para las pestañas sin activar */
+QPushButton[checkable="true"] {
+    background-color: #1C1C1C;
+    color: #888888;
+    border: 1px solid #2D2D2D;
+    border-bottom: none;
+    border-radius: 4px 4px 0px 0px;
+    padding: 0 15px;
 }
 
+QPushButton[checkable="true"]:hover {
+    background-color: #262626;
+    color: #FFFFFF;
+}
+
+/* Estilo estricto cuando la pestaña está seleccionada/activa */
+QPushButton[checkable="true"]:checked {
+    background-color: #121212;
+    color: #00FF95; /* Texto en verde SIPA para saber dónde estamos */
+    border: 1px solid #333333;
+    border-bottom: 2px solid #00FF95; /* Subrayado de pestaña activa */
+}
+
+/* --- BOTONES DE SERVICIOS Y GESTIÓN --- */
 #BtnManage { 
-    background-color: #3A86FF; 
+    background-color: #0F52BA; /* Azul zafiro operativo */
+    color: #FFFFFF;
+    border: 1px solid #3A86FF;
+}
+#BtnManage:hover {
+    background-color: #3A86FF;
 }
 
 #BtnLocked { 
-    background-color: #222222; 
+    background-color: #1A1A1A; 
     color: #555555; 
-    border: 1px dashed #444444; 
+    border: 1px dashed #333333; 
 }
 
-#BtnCierre { 
-    background-color: #442222; 
-    color: #E63946; 
-    border: 1px solid #E63946; 
+/* --- EL NUEVO BOTÓN SHUTDOWN (CIERRE SEGURO) --- */
+#BtnCierre, QPushButton#btn_shutdown { 
+    background-color: #3A161A; 
+    color: #FF6B6B; 
+    border: 1px solid #5A2328; 
 }
-#BtnCierre:hover {
-    background-color: #E63946;
-    color: #121212;
+#BtnCierre:hover, QPushButton#btn_shutdown:hover {
+    background-color: #721C24;
+    color: #FFFFFF;
+    border: 1px solid #FF6B6B;
+}
+
+/* --- CONSOLAS O CAMPOS DE TEXTO (EDITOR / LOGS) --- */
+QTextEdit, QPlainTextEdit {
+    background-color: #080808;
+    color: #C5C5C5;
+    font-family: 'Consolas', 'Courier New', monospace;
+    border: 1px solid #222222;
+    border-radius: 4px;
+    padding: 8px;
 }
