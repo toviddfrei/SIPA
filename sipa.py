@@ -2,7 +2,7 @@
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: sipa.py
 # Módulo: Core Dashboard / SPA Manager
-# Versión: 2.0.0.6 | Fecha: 24/05/2026
+# Versión: 2.1.0.0 | Fecha: 26/05/2026
 # Autor: Daniel Miñana Montero & Gemini
 # ==========================================================
 
@@ -13,7 +13,7 @@ import subprocess
 import getpass 
 import random
 from datetime import datetime
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, \
                              QHBoxLayout, QGridLayout, QPushButton, QLabel, \
                              QFrame, QTextEdit, QStackedWidget)
 from PySide6.QtCore import Qt, QTimer
@@ -21,8 +21,6 @@ from PySide6.QtCore import Qt, QTimer
 # =================================================================
 # FASE 0: IGNICIÓN DEL GATEWAY SEGURIDAD (RDDR, CAJA NEGRA Y FORENSE)
 # =================================================================
-import sys
-import os
 
 # Puente temporal para acoplar el Router transversal en el milisegundo cero
 RUTA_BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "core", "services")
@@ -37,27 +35,21 @@ except ImportError as e:
     print(f"❌ CRITICAL: No se pudo acoplar el Gateway de Enrutamiento: {e}")
     sys.exit(1)
 
-# 2. IGNICIÓN DEL SISTEMA DE LOGS AVANZADO (Tus archivos subidos)
+# 2. IGNICIÓN DEL SISTEMA DE LOGS AVANZADO (Nuevo Servicio Unificado)
 try:
-    from config_loggers import setup_logger, setup_advanced_logging
-    # Encendemos el ListHandler en memoria de inmediato para capturar todo el arranque
+    from external.SIPAbap.core.services.sbsipabap_log import setup_logger, setup_advanced_logging
     logger_estructura, log_messages = setup_logger()
-    
-    # NOTA: En cuanto se inicialice tu `DatabaseManager` más adelante en el código, 
-    # ejecutarás: setup_advanced_logging(db_manager, session_id)
 except Exception as e:
     print(f"⚠️ Alerta Core: Sistema de logs avanzado en standby: {e}")
 
 # 3. VERIFICACIÓN Y COMPROBACIÓN DE ENTRAÑAS (Tus nuevos servicios)
 try:
-    # A. Llamamos a tu Guardián de Infraestructura unificado
     from external.SIPAbap.core.services.sbsipabap_env import EnvironmentManager
     guardian = EnvironmentManager()
     if not guardian.check_all():
         logger_estructura.critical("Fallo catastrófico en la certificación de infraestructura FHS.")
         sys.exit(1)
         
-    # B. Despertamos a la Sonda Forense Sentinel sobre este propio archivo launcher
     from external.SIPAbap.core.services.sbsipabap_sentinel import sonda
     if not sonda.ejecutar_auditoria(__file__):
         logger_estructura.critical("Bloqueo preventivo: Firma digital o árbol AST corrupto.")
@@ -65,10 +57,10 @@ try:
 
 except ImportError as e:
     print(f"⚠️ Nota de desarrollo: Motores SIPAbap en proceso de acople: {e}")
+
 # =================================================================
 # CONFIGURACIÓN DE RUTAS CENTRALIZADA (VÍA GATEWAY)
 # =================================================================
-# El Router nos resuelve los caminos absolutos directamente desde la RAM
 RUTA_SIPACUR   = SIPARouterGateway.obtener_ruta("external", "SIPAcur")
 RUTA_SERVICIOS = SIPARouterGateway.obtener_ruta("core", "services")
 # =================================================================
@@ -77,7 +69,7 @@ print("\n" + "="*60)
 print("             SISTEMA INTEGRAL SIPA - CORE SPA")
 print("="*60)
 
-# 2. Importaciones dinámicas de módulos gráficos SIPA (Mapeo de Trazabilidad)
+# Importaciones dinámicas de módulos gráficos SIPA (Mapeo de Trazabilidad)
 try:
     from sipacur import SIPAcurDashboard
     print("🟢 Interfaz Módulo: 'SIPAcurDashboard' acoplada con éxito.")
@@ -113,9 +105,18 @@ except ImportError:
     print("⚠️  Componente Visual: 'ConfigEditorNode' no disponible.")
     ConfigEditorNode = None
 
+# IMPORTACIÓN DE LA PASARELA DE ACCESO AUTORIZADO (SIPAbap Services)
+try:
+    from external.SIPAbap.core.services.sbsipabap_login import SIPALoginFrame, SIPALoginManager
+    from core.persistence import db_engine
+    print("🟢 Pasarela de Identidad: 'SIPALoginFrame' integrada correctamente.")
+except ImportError as e:
+    print(f"❌ CRITICAL: No se pudo acoplar el módulo de autenticación: {e}")
+    sys.exit(1)
+
 print("="*60 + "\n")
 
-# Configuración de archivos de datos
+USER_NAME = getpass.getuser()
 if not os.path.exists(ROOT_SIPA) or "SIPA" not in ROOT_SIPA:
     CONFIG_FILE = f"/home/{USER_NAME}/SIPA/data/archive/template_propietario.md"
     SERVICE_CONFIG_PATH = f"/home/{USER_NAME}/SIPA/core/services/ssipa_config.py"
@@ -123,34 +124,21 @@ else:
     CONFIG_FILE = os.path.join(ROOT_SIPA, "data", "archive", "template_propietario.md")
     SERVICE_CONFIG_PATH = os.path.join(ROOT_SIPA, "core/services/ssipa_config.py")
 
-# =================================================================
-# CARGA DE ESTILOS SEGUNDO NIVEL (VÍA GATEWAY)
-# =================================================================
-# El Router nos resuelve el camino al QSS directamente desde la raíz
 QSS_FILE_PATH = SIPARouterGateway.obtener_ruta("sipa_styles.qss")
-# =================================================================
 
-# ==========================================================
-# RESTRICCIÓN DE ACCESOS INTERNOS (Matriz de Niveles)
-# ==========================================================
 MATRIZ_PERMISOS = {
-    0: 0,  # Dashboard (Permitido para todos)
-    1: 2,  # Editor MD (Requiere Nivel 2+)
-    2: 1,  # IA SIPAcur (Requiere Nivel 1+)
-    3: 3,  # Servicios / Monitor (Requiere Nivel 3+)
-    4: 2,  # Huella Digital (Requiere Nivel 2+)
-    5: 5   # Configuración del Sistema (Solo Propietario / Nivel 5)
+    0: 0,  # Dashboard
+    1: 2,  # Editor MD
+    2: 1,  # IA SIPAcur
+    3: 3,  # Servicios / Monitor
+    4: 2,  # Huella Digital
+    5: 5   # Configuración del Sistema
 }
-
-
-# ==========================================================
-# LÓGICA DE IDENTIDAD Y COMPONENTES
-# ==========================================================
 
 def extraer_identidad():
     datos = {
         "nombre": "Invitado", "apellido_1": "User", "apellido_2": "",
-        "tipo_user": 0, "nombre_app": "SIPA SYSTEM"
+        "tipo_user": 0, "nombre_app": "SIPA SYSTEM", "dni": ""
     }
     logs = []
     logs.append(f"🔍 Buscando núcleo en: {CONFIG_FILE}")
@@ -177,7 +165,29 @@ def extraer_identidad():
                 logs.append(f"✅ Identidad verificada: {datos['nombre']} (Nivel {datos['tipo_user']})")
     except Exception as e:
         logs.append(f"❌ ERROR IDENTIDAD: {str(e)}")
+        return datos, logs
+
+    try:
+        if db_engine and db_engine.is_connected():
+            nombre_completo = f"{datos['nombre']} {datos['apellido_1']} {datos['apellido_2']}".strip()
+            type_user_id = 1 if datos["tipo_user"] == 5 else 3
+            
+            sql_update = """
+                UPDATE user 
+                SET nombre_completo = ?, 
+                    type_user_id = ?, 
+                    biografia_corta = ?
+                WHERE id = 1
+            """
+            biografia = f"Perfil automatizado bajo protocolo BOLARDO. App: {datos['nombre_app']}"
+            db_engine._cursor.execute(sql_update, (nombre_completo, type_user_id, biografia))
+            db_engine._conn.commit()
+            logs.append("💾 [Sincronizador] Base de datos SQLite unificada con los cambios del Markdown.")
+    except Exception as e:
+        logs.append(f"⚠️ [Sincronizador] No se pudo replicar al almacén relacional: {e}")
+
     return datos, logs
+
 
 class ServiceCard(QFrame):
     def __init__(self, title, status, details, level_required=1, user_level=0, callback=None, parent=None):
@@ -213,6 +223,7 @@ class ServiceCard(QFrame):
         layout.addWidget(self.lbl_details)
         layout.addStretch()
         layout.addWidget(self.btn_manage)
+
 
 class VistaDashboard(QWidget):
     def __init__(self, identidad, user_level, callback_config, parent=None):
@@ -259,13 +270,14 @@ class VistaDashboard(QWidget):
 
 
 # ==========================================================
-# VENTANA PRINCIPAL SIPA
+# CORTAFUEGOS GRÁFICO / CONTENEDOR MAESTRO DE VENTANA ÚNICA
 # ==========================================================
 
 class SIPADashboard(QMainWindow):
-    def __init__(self):
+    """El Dashboard Principal de SIPA (Se despliega tras validación exitosa)"""
+    def __init__(self, user_profile_db=None, app_name_md="SIPA SYSTEM"):
         super().__init__()
-        self.identidad = {"nombre": "Cargando...", "apellido_1": "", "tipo_user": 0, "nombre_app": "SIPA"}
+        self.identidad = {"nombre": "Cargando...", "apellido_1": "", "tipo_user": 0, "nombre_app": app_name_md}
         self.user_level = 0
         
         self.init_ui()
@@ -276,7 +288,7 @@ class SIPADashboard(QMainWindow):
         self.log_timer.start(4000)
 
     def init_ui(self):
-        self.setWindowTitle("SIPA SYSTEM")
+        self.setObjectName("SipaMainWindow")
         self.resize(1280, 850)
         
         if os.path.exists(QSS_FILE_PATH):
@@ -307,7 +319,6 @@ class SIPADashboard(QMainWindow):
         self.sidebar_layout.addWidget(self.lbl_rango)
         self.sidebar_layout.addSpacing(30)
 
-        # Definición de botones de barra lateral
         self.btn_dash = QPushButton("📊  Dashboard")
         self.btn_editor = QPushButton("📝  Editor MD")
         self.btn_sipacur = QPushButton("🧠  IA SIPAcur")
@@ -333,7 +344,8 @@ class SIPADashboard(QMainWindow):
         self.sidebar_layout.addStretch()
         self.btn_exit = QPushButton("CIERRE SEGURO")
         self.btn_exit.setObjectName("BtnCierre")
-        self.btn_exit.clicked.connect(self.close)
+        # .window() busca hacia arriba en el árbol de Qt hasta encontrar el QMainWindow real activo
+        self.btn_exit.clicked.connect(lambda: self.window().close()) 
         self.sidebar_layout.addWidget(self.btn_exit)
 
         # --- ZONA DERECHA ---
@@ -344,7 +356,6 @@ class SIPADashboard(QMainWindow):
         self.contenedor_paginas = QStackedWidget()
         layout_derecho.addWidget(self.contenedor_paginas, stretch=1)
 
-        # Consola de logs inferior
         self.console = QTextEdit()
         self.console.setObjectName("Console")
         self.console.setReadOnly(True)
@@ -377,12 +388,8 @@ class SIPADashboard(QMainWindow):
         self.lbl_user_name.setText(f"{self.identidad['nombre']} {self.identidad['apellido_1']}")
         self.lbl_rango.setText(f"Rango: Nivel {self.user_level}")
         
-        # --- INSTANCIACIÓN Y ACOPLAMIENTO DE MÓDULOS ---
-        
-        # 0. Dashboard
         self.vista_dashboard = VistaDashboard(self.identidad, self.user_level, self.ir_a_configuracion_directa)
         
-        # 1. Editor Markdown
         if SIPAMarkdownEditor:
             self.vista_editor = SIPAMarkdownEditor()
             self.add_log("📝 Editor MD: Acoplado al núcleo correctamente.")
@@ -390,7 +397,6 @@ class SIPADashboard(QMainWindow):
             self.vista_editor = QLabel("❌ Error: No se pudo cargar 'ssipa_edit_markdown.py'.")
             self.vista_editor.setAlignment(Qt.AlignCenter)
 
-        # 2. IA SIPAcur
         if SIPAcurDashboard:
             self.vista_sipacur = SIPAcurDashboard()
             self.add_log("🧠 SIPAcur: Módulo de IA activo.")
@@ -398,7 +404,6 @@ class SIPADashboard(QMainWindow):
             self.vista_sipacur = QLabel("❌ Error: 'sipacur.py' no encontrado.")
             self.vista_sipacur.setAlignment(Qt.AlignCenter)
             
-        # 3. Monitor de Servicios
         if VistaServicios:
             self.vista_servicios = VistaServicios()
             self.add_log("⚙️ Servicios: Monitor de estado activo.")
@@ -406,7 +411,6 @@ class SIPADashboard(QMainWindow):
             self.vista_servicios = QLabel("❌ Error: 'ssipa_servicios.py' no disponible.")
             self.vista_servicios.setAlignment(Qt.AlignCenter)
             
-        # 4. Huella Digital & Dorks
         if HuellaDigitalFrame:
             self.vista_huella = HuellaDigitalFrame()
             self.add_log("🛡️ Huella Digital: Módulo OSINT/Dorks acoplado con éxito.")
@@ -414,7 +418,6 @@ class SIPADashboard(QMainWindow):
             self.vista_huella = QLabel("❌ Error: Fichero 'ssipa_identif.py' no encontrado en el árbol.")
             self.vista_huella.setAlignment(Qt.AlignCenter)
 
-        # 5. Configuración Integrada (Clase limpia que contiene el editor)
         if ConfigEditorNode:
             self.vista_config = ConfigEditorNode()
             self.add_log("🛠 Configuración: Editor Markdown unificado y asignado al perfil del Propietario.")
@@ -422,7 +425,6 @@ class SIPADashboard(QMainWindow):
             self.vista_config = QLabel("❌ Error: 'ssipa_config.py' no pudo instanciarse.")
             self.vista_config.setAlignment(Qt.AlignCenter)
         
-        # Agregar al StackedWidget siguiendo el orden estricto de los botones
         self.contenedor_paginas.addWidget(self.vista_dashboard) # 0
         self.contenedor_paginas.addWidget(self.vista_editor)    # 1
         self.contenedor_paginas.addWidget(self.vista_sipacur)   # 2
@@ -430,7 +432,6 @@ class SIPADashboard(QMainWindow):
         self.contenedor_paginas.addWidget(self.vista_huella)    # 4 
         self.contenedor_paginas.addWidget(self.vista_config)    # 5
         
-        # Ejecutar el interceptor de seguridad para pintar y congelar los botones bloqueados
         self.aplicar_control_accesos()
 
     def navegar_a(self, indice):
@@ -442,7 +443,6 @@ class SIPADashboard(QMainWindow):
         self.add_log(f"📂 Navegando a módulo: {nombres.get(indice)}")
 
     def ir_a_configuracion_directa(self):
-        """Callback del botón de la Card en el Dashboard para ir al frame embebido interno"""
         if self.user_level >= MATRIZ_PERMISOS[5]:
             self.navegar_a(5)
         else:
@@ -455,35 +455,79 @@ class SIPADashboard(QMainWindow):
     def simular_log(self):
         frases = ["Pulso de red estable", "Integridad del núcleo OK", "Monitorización pasiva activa", "Escaneo de seguridad periódico"]
         self.add_log(random.choice(frases))
-    
-    def abrir_fichero_seleccionado(self, index):
-        """Obtiene la ruta del archivo y lo abre para edición."""
-        # El índice proviene del ProxyModel, hay que mapearlo al modelo original
-        source_index = self.px_seg.mapToSource(index) if self.tabs.currentIndex() == 2 else self.px_inbox.mapToSource(index)
-        row = source_index.row()
-        model = source_index.model()
+
+
+class SPAWindowsManager(QMainWindow):
+    """
+    Contenedor Raíz de Intercambio de Testigos. 
+    Gobierna la Ventana Única alternando entre el Login y el Dashboard.
+    """
+    def __init__(self, bypass_profile=None, app_name_md="TOVID DFREI"):
+        super().__init__()
+        self.app_name = app_name_md
+        self.setWindowTitle(self.app_name)
+        self.resize(1280, 850) # Dimensiones unificadas de la terminal
         
-        # Buscamos la columna 'path_actual'
-        try:
-            col_path = COLUMNAS_INBOX.index("path_actual")
-            ruta = model.index(row, col_path).data()
+        # Base SPA
+        self.base_container = QWidget(self)
+        self.setCentralWidget(self.base_container)
+        self.spa_layout = QVBoxLayout(self.base_container)
+        self.spa_layout.setContentsMargins(0, 0, 0, 0)
+        self.spa_layout.setSpacing(0)
+        
+        # Enrutamiento inicial
+        if bypass_profile:
+            self.conmutar_a_dashboard(bypass_profile)
+        else:
+            self.cargar_login_pasarela()
+
+    def cargar_login_pasarela(self):
+        # Instanciamos el frame asimétrico de sbsipabap_login.py
+        self.login_frame = SIPALoginFrame(db_manager=db_engine, app_name_from_md=self.app_name)
+        # Escuchamos la señal de concesión manual
+        self.login_frame.login_concedido.connect(self.conmutar_a_dashboard)
+        self.spa_layout.addWidget(self.login_frame)
+
+    def conmutar_a_dashboard(self, user_profile):
+        # Limpieza atómica del Login para evitar fugas de memoria
+        if hasattr(self, 'login_frame') and self.login_frame:
+            self.spa_layout.removeWidget(self.login_frame)
+            self.login_frame.deleteLater()
+            self.login_frame = None
             
-            if ruta and os.path.exists(ruta):
-                # OPCIÓN: Abrir con el editor del sistema
-                if sys.platform == "win32":
-                    os.startfile(ruta)
-                else:
-                    opener = "open" if sys.platform == "darwin" else "xdg-open"
-                    subprocess.call([opener, ruta])
-                
-                self.log_txt.append(f"📝 Abriendo editor para: {os.path.basename(ruta)}")
-            else:
-                QMessageBox.warning(self, "Error", "No se encuentra el archivo físico.")
-        except Exception as e:
-            self.log_txt.append(f"❌ Error al abrir archivo: {e}")
+        # Instanciamos tu Dashboard completo dentro de la misma ventana
+        self.dashboard_core = SIPADashboard(user_profile_db=user_profile, app_name_md=self.app_name)
+        
+        # Extraemos el widget central del QMainWindow del Dashboard para embeberlo de forma limpia
+        widget_embebido = self.dashboard_core.centralWidget()
+        widget_embebido.setParent(self.base_container)
+        
+        # Sincronizamos la barra de menús o títulos de la ventana raíz con el Dashboard
+        self.setWindowTitle(self.dashboard_core.windowTitle())
+        
+        self.spa_layout.addWidget(widget_embebido)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = SIPADashboard()
-    window.show()
+    
+    # Aplicar estilos QSS globales desde el primer milisegundo
+    if os.path.exists(QSS_FILE_PATH):
+        with open(QSS_FILE_PATH, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+
+    # Ejecución forzada de la sincronización en caliente (Fase 0)
+    meta_datos, _ = extraer_identidad()
+    instancia_nombre = meta_datos.get("nombre_app", "TOVID DFREI")
+    
+    # Evaluación del Bypass en base de datos mediante el campo 'config_seguridad'
+    bypass_detectado, perfil_relacional = SIPALoginManager.comprobar_bypass(db_engine)
+    
+    # Lanzamiento del Administrador de Ventana Única SPA
+    if bypass_detectado:
+        launcher = SPAWindowsManager(bypass_profile=perfil_relacional, app_name_md=instancia_nombre)
+    else:
+        launcher = SPAWindowsManager(bypass_profile=None, app_name_md=instancia_nombre)
+        
+    launcher.show()
     sys.exit(app.exec())
