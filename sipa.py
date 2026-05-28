@@ -180,7 +180,6 @@ def extraer_identidad():
 
     return datos, logs
 
-
 class ServiceCard(QFrame):
     def __init__(self, title, status, details, level_required=1, user_level=0, callback=None, parent=None):
         super().__init__(parent)
@@ -215,7 +214,6 @@ class ServiceCard(QFrame):
         layout.addWidget(self.lbl_details)
         layout.addStretch()
         layout.addWidget(self.btn_manage)
-
 
 class VistaDashboard(QWidget):
     def __init__(self, identidad, user_level, callback_config, parent=None):
@@ -259,7 +257,6 @@ class VistaDashboard(QWidget):
         for i, (title, status, desc, req, func) in enumerate(cards_data):
             card = ServiceCard(title, status, desc, req, self.user_level, callback=func)
             self.grid_layout.addWidget(card, positions[i][0], positions[i][1])
-
 
 class SIPADashboard(QWidget):
     """
@@ -315,11 +312,13 @@ class SIPADashboard(QWidget):
         fila_superior.addWidget(self.lbl_user_identity)
         fila_superior.addStretch()
 
-        # Lado Derecho: Utilidades de Sistema
+        # --- Lado Derecho de la Fila Superior ---
         self.btn_menu = QPushButton("☰")
         self.btn_menu.setFixedWidth(40)
         self.btn_menu.setCursor(Qt.PointingHandCursor)
         self.btn_menu.setStyleSheet("background-color: #262626; border: 1px solid #333; color: #888;")
+        # 🔗 CONECTAMOS EL MENÚ HAMBURGUESA AL LOGOUT SEGURO
+        self.btn_menu.clicked.connect(self.ejecutar_logout_operador)
         
         self.btn_shutdown = QPushButton("🔒 APAGAR")
         self.btn_shutdown.setFixedWidth(100)
@@ -469,6 +468,25 @@ class SIPADashboard(QWidget):
         if self.user_level >= MATRIZ_PERMISOS[5]:
             self.navegar_a(5)
 
+    def ejecutar_logout_operador(self):
+            """
+            Rompe el bypass en la base de datos para evitar bucles automáticos 
+            y ordena al mánager regresar a la pasarela de autenticación.
+            """
+            try:
+                from core.persistence import db_engine
+                import json
+                if db_engine and db_engine.is_connected():
+                    # Desactivamos el remember_me para que el Login se muestre limpio
+                    config_str = json.dumps({"remember_me": False})
+                    db_engine._cursor.execute("UPDATE user SET config_seguridad = ? WHERE id = 1", (config_str,))
+                    db_engine._conn.commit()
+            except Exception as e:
+                print(f"⚠️ Alerta en Logout (Persistencia): {e}")
+
+            # Le decimos a la ventana maestra que destruya el entorno y pinte el login
+            if self.parent_window and hasattr(self.parent_window, "regresar_al_login"):
+                self.parent_window.regresar_al_login()
 
 class SPAWindowsManager(QMainWindow):
     """
@@ -508,6 +526,22 @@ class SPAWindowsManager(QMainWindow):
         self.spa_layout.addWidget(self.dashboard_core)
         self.setWindowTitle(f"{self.app_name} — Panel Operativo")
 
+    def regresar_al_login(self):
+        """
+        Efectúa la desconexión del operador, destruye el panel operativo horizontal 
+        y vuelve a levantar el frame de autenticación asimétrico.
+        """
+        # 1. Si el Dashboard está vivo, lo desmontamos y liberamos memoria
+        if hasattr(self, 'dashboard_core') and self.dashboard_core is not None:
+            self.spa_layout.removeWidget(self.dashboard_core)
+            self.dashboard_core.deleteLater()
+            self.dashboard_core = None
+            
+        # 2. Restablecemos el título base de la aplicación
+        self.setWindowTitle(self.app_name)
+        
+        # 3. Volvemos a invocar la pasarela original
+        self.cargar_login_pasarela()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

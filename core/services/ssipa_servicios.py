@@ -1,3 +1,10 @@
+# =====================================================================
+# MÓDULO: ssipa_servicios.py (v0.2.7 - Monitor de Integridad Saneado)
+# UBICACIÓN: /home/toviddfrei/SIPA/core/services/
+# DESCRIPCIÓN: Monitor forense de hilos asíncronos con parada segura.
+# AUTOR: Daniel Miñana Montero & Gemini
+# =====================================================================
+
 import os
 import json
 import hashlib
@@ -30,6 +37,7 @@ class VistaServicios(QWidget):
         
         self.init_ui()
         
+        # --- CONTROL DE CONTROL FORENSE (HILOS SEGURADOS) ---
         self.monitor_activo = True
         self.hilo_check = threading.Thread(target=self.bucle_monitoreo, daemon=True)
         self.hilo_check.start()
@@ -48,14 +56,12 @@ class VistaServicios(QWidget):
             try:
                 with open(MANIFEST_PATH, 'r') as f:
                     self.hashes_referencia = json.load(f)
-                # Sincronizar la lista de lo que DEBERÍA existir basado en el manifiesto guardado
                 for nombre in self.hashes_referencia.keys():
                     self.servicios_registrados.add(nombre)
                     self.alertas_disparadas[nombre] = {"existencia": False, "integridad": False}
             except:
                 pass
         
-        # Si hay archivos nuevos en la carpeta que no estaban en el manifiesto, se indexan ahora
         modificado = False
         for nombre in archivos:
             if nombre not in self.hashes_referencia:
@@ -118,12 +124,15 @@ class VistaServicios(QWidget):
         return os.path.exists(ruta_live)
 
     def bucle_monitoreo(self):
-        """Bucle permanente en hilo secundario."""
+        """Bucle en hilo secundario controlado por bandera de ciclo de vida."""
         while self.monitor_activo:
             dict_actual = {}
             
-            # Analizamos basándonos estrictamente en el Manifiesto Permanente
             for nombre in list(self.servicios_registrados):
+                # Si el hilo ha sido mandado a apagar en mitad de la iteración, abortamos inmediatamente
+                if not self.monitor_activo:
+                    return
+
                 ruta = os.path.join(SERVICIOS_PATH, nombre)
                 existe = os.path.exists(ruta)
                 
@@ -137,7 +146,8 @@ class VistaServicios(QWidget):
                     
                     if not self.alertas_disparadas[nombre]["existencia"]:
                         self.alertas_disparadas[nombre]["existencia"] = True
-                        self.datos_actualizados.emit(dict_actual) 
+                        if self.monitor_activo:
+                            self.datos_actualizados.emit(dict_actual) 
                 else:
                     self.alertas_disparadas[nombre]["existencia"] = False
                     p1_str = "🟢 SÍ"
@@ -154,18 +164,18 @@ class VistaServicios(QWidget):
                         estado_final = "🔴 ALERTA INTEGRIDAD"
                         global_ok = False
                         
-                        # Disparar Ventana Interactiva si es un cambio no controlado aún
                         if not self.alertas_disparadas[nombre]["integridad"]:
                             self.alertas_disparadas[nombre]["integridad"] = True
-                            self.solicitar_autorizacion.emit(
-                                "VIOLACIÓN DE INTEGRIDAD DETECTADA",
-                                f"El servicio '{nombre}' ha sido modificado o reemplazado de forma externa.\n\n"
-                                f"Hash Esperado: {hash_original[:16]}...\n"
-                                f"Hash Detectado: {hash_actual[:16]}...\n\n"
-                                "¿Desea AUTORIZAR este cambio y registrar el nuevo Hash como legítimo?",
-                                nombre,
-                                hash_actual
-                            )
+                            if self.monitor_activo:
+                                self.solicitar_autorizacion.emit(
+                                    "VIOLACIÓN DE INTEGRIDAD DETECTADA",
+                                    f"El servicio '{nombre}' ha sido modificado o reemplazado de forma externa.\n\n"
+                                    f"Hash Esperado: {hash_original[:16]}...\n"
+                                    f"Hash Detectado: {hash_actual[:16]}...\n\n"
+                                    "¿Desea AUTORIZAR este cambio y registrar el nuevo Hash como legítimo?",
+                                    nombre,
+                                    hash_actual
+                                )
                     else:
                         self.alertas_disparadas[nombre]["integridad"] = False
                         p2_str = "🟢 ÍNTEGRO"
@@ -184,11 +194,32 @@ class VistaServicios(QWidget):
                     "ok": global_ok
                 }
             
-            self.datos_actualizados.emit(dict_actual)
+            # Envío seguro de datos si la ventana sigue activa en memoria
+            if self.monitor_activo and dict_actual:
+                try:
+                    self.datos_actualizados.emit(dict_actual)
+                except RuntimeError:
+                    # Captura secundaria por si Qt destruye el objeto justo en este microsegundo
+                    break
+                    
             time.sleep(1.5)
+
+    def closeEvent(self, event):
+        """
+        MÉTODO CRÍTICO DE CIERRE SEGURO (GUILLOTINA DE HILOS):
+        Se ejecuta de forma automática cuando el QStackedWidget o el Manager 
+        eliminan este widget de la interfaz física para volver al Login.
+        """
+        print("🛑 [SIPA CORE] Deteniendo de forma segura el hilo de monitorización asíncrono...")
+        self.monitor_activo = False  # Rompe el bucle while del hilo secundario al instante
+        super().closeEvent(event)
 
     @Slot(dict)
     def refrescar_tabla(self, datos):
+        # Doble salvaguarda: si nos han mandado a apagar, no repintamos
+        if not self.monitor_activo:
+            return
+            
         self.tabla.setRowCount(0)
         for fila, (nombre, info) in enumerate(datos.items()):
             self.tabla.insertRow(fila)
@@ -221,6 +252,9 @@ class VistaServicios(QWidget):
 
     @Slot(str, str, str, str)
     def mostrar_alerta_decision(self, titulo, mensaje, nombre_servicio, nuevo_hash):
+        if not self.monitor_activo:
+            return
+            
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle(titulo)
