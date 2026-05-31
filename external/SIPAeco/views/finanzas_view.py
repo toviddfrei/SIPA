@@ -1,43 +1,95 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+SIPAeco GUI - Gestión de Caja, Pasarela Bancaria y Previsiones Elásticas
+Ubicación: SIPA/external/SIPAeco/views/finanzas_view.py
+Autor: Daniel Miñana Montero
+Descripción: Módulo de interfaz para finanzas con entrada de datos blindada,
+             replicando exactamente el motor de lectura y eventos de tiempo_view.py.
+"""
 
 import os
 import uuid
+import subprocess
 from datetime import datetime, timedelta
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
                              QTableWidgetItem, QPushButton, QLabel, QLineEdit, 
-                             QFrame, QMessageBox, QComboBox, QFileDialog, QHeaderView, QDialog)
+                             QFrame, QMessageBox, QComboBox, QFileDialog, QHeaderView, QDialog, QMenu)
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QFont
 
 # Servicio especializado
 from core.services.sesipaeco_caja import SESIPAecoCajaService
 
 class FinanzasTab(QWidget):
-    def __init__(self, core_base, parent=None):
-        super().__init__(parent)
-        self.core = core_base
+    def __init__(self, core, parent_window=None):
+        super().__init__(parent_window)
+        self.core = core
+        self.parent_window = parent_window
         
-        # Cachés relacionales locales
-        self.hitos_locales_cache = {}
-        self.catalogos_locales_cache = {}
-        
-        # Lista en memoria de registros pre-filtrados para la paginación activa
+        # Cachés relacionales idénticas al motor de impactos de tiempo
+        self.hitos_cache = {}
         self.registros_filtrados_cache = []
+        self.ficheros_temporales_formulario = []
         
-        # Instanciamos el servicio financiero
         self.servicio_caja = SESIPAecoCajaService(self.core)
-        
-        # Inicializar UI
         self.init_ui()
 
     def init_ui(self):
-        """Construye la interfaz simplificada, ultra-ligera y con paginación avanzada."""
+        """Construye la interfaz con el patrón de entrada infalible de hitos."""
         layout_principal = QVBoxLayout(self)
         layout_principal.setContentsMargins(10, 10, 10, 10)
         layout_principal.setSpacing(10)
         
-        # --- 1. SCORECARDS METRICAS (CALCULO DE PERSPECTIVA DE 6 MESES) ---
+        # =====================================================================
+        # 1. FORMULARIO DE ENTRADA (Estilo Impactos de Tiempo - Entrada Directa)
+        # =====================================================================
+        frame_form = QFrame()
+        frame_form.setStyleSheet("QFrame { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }")
+        form_layout = QHBoxLayout(frame_form)
+        form_layout.setContentsMargins(10, 10, 10, 10)
+        form_layout.setSpacing(8)
+        
+        # Combo de Hitos: Usa la misma estrategia de texto que tiempo_view.py
+        self.combo_vincular_hito = QComboBox()
+        self.combo_vincular_hito.setFixedWidth(280)
+        
+        self.combo_f_naturaleza = QComboBox()
+        self.combo_f_naturaleza.addItems(["GASTO 🔽", "INGRESO 🔼"])
+        self.combo_f_naturaleza.setFixedWidth(110)
+        
+        self.combo_f_estado = QComboBox()
+        self.combo_f_estado.addItems(["REAL (BALA)", "PREVISIÓN PLAN"])
+        self.combo_f_estado.setFixedWidth(130)
+        
+        self.in_f_concepto = QLineEdit()
+        self.in_f_concepto.setPlaceholderText("Concepto manual...")
+        
+        self.in_f_cantidad = QLineEdit()
+        self.in_f_cantidad.setPlaceholderText("Importe (€)")
+        self.in_f_cantidad.setFixedWidth(90)
+        
+        self.btn_adjuntar_form = QPushButton("📎 Justificante (0)")
+        self.btn_adjuntar_form.clicked.connect(self.adjuntar_fichero_temporal_formulario)
+        
+        btn_disparar = QPushButton("🚀 Fichar Caja")
+        btn_disparar.setStyleSheet("background-color: #0969da; color: white; font-weight: bold; padding: 4px 12px; border-radius: 4px;")
+        btn_disparar.clicked.connect(self.procesar_bala_local)
+        
+        # Ensamblado lineal idéntico en cabecera superior
+        form_layout.addWidget(QLabel("<b>Hito Núcleo Vinculante:</b>"))
+        form_layout.addWidget(self.combo_vincular_hito)
+        form_layout.addWidget(self.combo_f_naturaleza)
+        form_layout.addWidget(self.combo_f_estado)
+        form_layout.addWidget(self.in_f_concepto)
+        form_layout.addWidget(self.in_f_cantidad)
+        form_layout.addWidget(self.btn_adjuntar_form)
+        form_layout.addWidget(btn_disparar)
+        layout_principal.addWidget(frame_form)
+        
+        # =====================================================================
+        # 2. SCORECARDS MÉTRICAS (Justo debajo de los inputs)
+        # =====================================================================
         panel_kpi = QHBoxLayout()
         
         self.card_previsto = QFrame()
@@ -69,7 +121,9 @@ class FinanzasTab(QWidget):
         panel_kpi.addWidget(self.card_desviacion, stretch=1)
         layout_principal.addLayout(panel_kpi)
         
-        # --- 2. PANEL DE PASARELA BANCARIA (.TXT) Y AUDITORÍA ---
+        # =====================================================================
+        # 3. PANEL DE PASARELA BANCARIA (.TXT)
+        # =====================================================================
         frame_banco = QFrame()
         frame_banco.setStyleSheet("QFrame { background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; }")
         ly_banco = QHBoxLayout(frame_banco)
@@ -93,161 +147,62 @@ class FinanzasTab(QWidget):
         ly_banco.addWidget(btn_auditoria)
         layout_principal.addWidget(frame_banco)
         
-        # --- 3. FORMULARIO DE INPUT DE NUEVO REGISTRO (CON VALORES COMPUESTOS) ---
-        frame_form = QFrame()
-        frame_form.setStyleSheet("QFrame { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }")
-        form_layout = QHBoxLayout(frame_form)
-        form_layout.setContentsMargins(8, 8, 8, 8)
-        
-        self.combo_f_crono = QComboBox()
-        self.combo_f_crono.setFixedWidth(140)
-        self.combo_f_crono.currentTextChanged.connect(self.on_crono_changed)
-        
-        self.combo_f_hito = QComboBox()
-        self.combo_f_hito.setFixedWidth(160)
-        
-        self.combo_f_naturaleza = QComboBox()
-        self.combo_f_naturaleza.addItems(["GASTO 🔽", "INGRESO 🔼"])
-        self.combo_f_naturaleza.setFixedWidth(110)
-        
-        self.combo_f_estado = QComboBox()
-        self.combo_f_estado.addItems(["REAL (BALA)", "PREVISIÓN PLAN"])
-        self.combo_f_estado.setFixedWidth(130)
-        
-        self.in_f_concepto = QLineEdit()
-        self.in_f_concepto.setPlaceholderText("Concepto manual...")
-        
-        self.in_f_cantidad = QLineEdit()
-        self.in_f_cantidad.setPlaceholderText("Importe (€)")
-        self.in_f_cantidad.setFixedWidth(90)
-        
-        btn_disparar = QPushButton("🚀 Fichar Caja")
-        btn_disparar.setStyleSheet("background-color: #0969da; color: white; font-weight: bold; padding: 4px 12px; border-radius: 4px;")
-        btn_disparar.clicked.connect(self.procesar_bala_local)
-        
-        form_layout.addWidget(QLabel("<b>Crono:</b>"))
-        form_layout.addWidget(self.combo_f_crono)
-        form_layout.addWidget(QLabel("<b>Hito:</b>"))
-        form_layout.addWidget(self.combo_f_hito)
-        form_layout.addWidget(self.combo_f_naturaleza)
-        form_layout.addWidget(self.combo_f_estado)
-        form_layout.addWidget(self.in_f_concepto)
-        form_layout.addWidget(self.in_f_cantidad)
-        form_layout.addWidget(btn_disparar)
-        layout_principal.addWidget(frame_form)
-        
-        # --- 4. BARRA DE CABECERA DE TABLA CON ABANICO DE PAGINACIÓN ---
-        ly_cabecera_tabla = QHBoxLayout()
-        self.lbl_titulo_tabla = QLabel("<b>📋 Flujo de Trabajo Activo (Desde 31/03/2026)</b>")
+        # =====================================================================
+        # 4. BARRA DE FILTRADO Y REGISTROS
+        # =====================================================================
+        ly_cabecera = QHBoxLayout()
+        self.lbl_titulo_tabla = QLabel("<b>📋 Flujo de Trabajo Activo (Últimos 60 días)</b>")
         self.lbl_titulo_tabla.setStyleSheet("color: #0f172a; font-size: 13px;")
+        ly_cabecera.addWidget(self.lbl_titulo_tabla, stretch=1)
+        ly_cabecera.addWidget(QLabel("<b>Ver filas:</b>"))
         
-        ly_cabecera_tabla.addWidget(self.lbl_titulo_tabla, stretch=1)
-        
-        # Paginador elástico solicitado para el abanico anterior/posterior
-        ly_cabecera_tabla.addWidget(QLabel("<b>Ver filas:</b>"))
         self.combo_paginacion = QComboBox()
         self.combo_paginacion.addItems(["25", "50", "100", "Todos posterior"])
-        self.combo_paginacion.setCurrentText("100")  # Valor por defecto seguro y rápido
+        self.combo_paginacion.setCurrentText("100")  
         self.combo_paginacion.currentTextChanged.connect(self.renderizar_pagina_actual)
-        ly_cabecera_tabla.addWidget(self.combo_paginacion)
+        ly_cabecera.addWidget(self.combo_paginacion)
+        layout_principal.addLayout(ly_cabecera)
         
-        layout_principal.addLayout(ly_cabecera_tabla)
-        
-        # --- 5. MATRIZ FINANCIERA (ESTILO BÁSICO, MÁXIMO RENDIMIENTO) ---
+        # =====================================================================
+        # 5. MATRIZ FINANCIERA PRINCIPAL (PARTE INFERIOR)
+        # =====================================================================
         self.table_finanzas = QTableWidget()
-        self.table_finanzas.setColumnCount(9)
+        self.table_finanzas.setColumnCount(10)
         self.table_finanzas.setHorizontalHeaderLabels([
-            "ID Hito Asignado", "Fecha / Cuenta", "Concepto / Acción (Extracto Banco)", "Previsto In", "Previsto Out", "Real In", "Real Out", "Desviación", "Acción"
+            "ID Hito Asignado", "Fecha / Cuenta", "Concepto / Acción (Extracto Banco)", 
+            "Previsto In", "Previsto Out", "Real In", "Real Out", "Desviación", "Ficheros", "Acción"
         ])
         self.table_finanzas.setSortingEnabled(False) 
-        self.table_finanzas.setWordWrap(True) # Ajuste a lo ancho activo
+        self.table_finanzas.setWordWrap(True) 
+        
+        fuente_compacta = QFont()
+        fuente_compacta.setPointSize(9)
+        self.table_finanzas.setFont(fuente_compacta)
         
         header = self.table_finanzas.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         layout_principal.addWidget(self.table_finanzas)
 
-    def poblar_combos_filtrado(self, catalogos):
-        self.combo_f_crono.blockSignals(True)
-        self.combo_f_crono.clear()
-        cronos_tipos = catalogos.get("cronogramas_tipos", {})
-        if cronos_tipos:
-            for c_id, c_info in cronos_tipos.items():
-                self.combo_f_crono.addItem(f"{c_info.get('codigo', c_id)} ({c_id})", c_id)
-        else:
-            self.combo_f_crono.addItem("SIPAeco Global", "SIPA")
-        self.combo_f_crono.blockSignals(False)
-        self.on_crono_changed()
-
-    def on_crono_changed(self):
-        self.combo_f_hito.clear()
-        idx = self.combo_f_crono.currentIndex()
-        if idx < 0: return
-        crono_id_target = self.combo_f_crono.itemData(idx)
-        hitos_filtrados = []
-        for hito_id, info in self.hitos_locales_cache.items():
-            if info.get("id_cronograma") == crono_id_target or info.get("cronograma_id") == crono_id_target:
-                hitos_filtrados.append(hito_id)
-        if hitos_filtrados:
-            self.combo_f_hito.addItems(sorted(hitos_filtrados))
-        else:
-            self.combo_f_hito.addItem("[Sin hitos]", "")
-
-    def solicitar_importacion_txt(self, tipo_cuenta):
-        ruta_sugerida = self.servicio_caja.ruta_online if tipo_cuenta == "ONLINE" else self.servicio_caja.ruta_ahorro
-        file_path, _ = QFileDialog.getOpenFileName(self, f"Importar Extracto - {tipo_cuenta}", ruta_sugerida, "Archivos (*.txt)")
-        if not file_path: return
-        try:
-            resultado = self.servicio_caja.procesar_txt_extracto(file_path, tipo_cuenta)
-            QMessageBox.information(self, "Sincronizado", f"Añadidos: {resultado['nuevos']} | Omitidos por Duplicidad: {resultado['duplicados']}")
-            if hasattr(self.window(), 'actualizar_todo'): self.window().actualizar_todo()
-        except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
-
-    def recargar_balances_interfaz(self):
-        master_data = self.core._load_json(self.core.cronogramas_path)
-        balances = master_data.get("finanzas_globales", {}).get("balances_apertura", {"ONLINE": 0.0, "AHORRO": 0.0})
-        self.lbl_status_banco.setText(f"<b>Apertura de Cuentas:</b> Online: <font color='#0969da'>{balances.get('ONLINE', 0.0):.2f}€</font> | Ahorro: <font color='#1a7f37'>{balances.get('AHORRO', 0.0):.2f}€</font>")
-
-    def procesar_bala_local(self):
-        hito_target = self.combo_f_hito.currentText()
-        concepto = self.in_f_concepto.text().strip()
-        cantidad_raw = self.in_f_cantidad.text().strip()
-        if not hito_target or hito_target.startswith("[") or not concepto or not cantidad_raw: return
-        try:
-            importe = float(cantidad_raw.replace(",", "."))
-        except ValueError: return
-        if "GASTO" in self.combo_f_naturaleza.currentText() and importe > 0: importe = -importe
-
-        master_data = self.core._load_json(self.core.cronogramas_path)
-        historico = master_data.setdefault("finanzas_globales", {}).setdefault("historico_bancario", [])
-        historico.append({
-            "hash_id": f"MANUAL-{uuid.uuid4().hex[:8].upper()}",
-            "fecha": datetime.now().strftime("%d/%m/%Y"),
-            "concepto": concepto,
-            "importe": importe,
-            "cuenta": "MANUAL",
-            "id_hito": hito_target,
-            "fecha_importacion": datetime.now().strftime("%Y-%m-%d %H:%M")
-        })
-        self.core._save_json(self.core.cronogramas_path, master_data)
-        self.in_f_concepto.clear()
-        self.in_f_cantidad.clear()
-        if hasattr(self.window(), 'actualizar_todo'): self.window().actualizar_todo()
-
-    # =====================================================================
-    # REFRESH DATA (PRE-FILTRADO EXCLUSIVO DE DATOS EN MEMORIA)
-    # =====================================================================
     def refresh_data(self, hitos_dict, catalogos):
-        """Carga y calcula los acumulados, aislando los datos calientes en la caché interna."""
-        self.hitos_locales_cache = hitos_dict
-        self.catalogos_locales_cache = catalogos
+        """Llamado por el Core. Inyecta datos en frío de manera idéntica a tiempo_view.py"""
+        self.hitos_cache = hitos_dict
         
-        if self.combo_f_crono.count() <= 1:
-            self.poblar_combos_filtrado(catalogos)
+        # Replicamos el llenado exacto por fuerza bruta sin eventos cruzados
+        self.combo_vincular_hito.blockSignals(True)
+        self.combo_vincular_hito.clear()
+        
+        lista_hitos_ordenados = sorted(list(hitos_dict.keys()))
+        for h_id in lista_hitos_ordenados:
+            nombre_breve = hitos_dict[h_id].get("nombre_accion", "")[:30]
+            self.combo_vincular_hito.addItem(f"{h_id} ({nombre_breve}...)", h_id)
+        self.combo_vincular_hito.blockSignals(False)
             
+        # Carga del repositorio maestro JSON de Finanzas
         master_data = self.core._load_json(self.core.cronogramas_path)
-        historico_bancario = master_data.get("finanzas_globales", {}).get("historico_bancario", [])
+        fin_globales = master_data.get("finanzas_globales", {})
+        historico_bancario = fin_globales.get("historico_bancario", [])
+        previsiones_manuales = fin_globales.get("previsiones_futuras", [])
         
         hoy = datetime.now()
         limite_60_dias = hoy - timedelta(days=60)
@@ -258,7 +213,7 @@ class FinanzasTab(QWidget):
         
         self.registros_filtrados_cache = []
         
-        # 1. Inyectar Previsiones automáticas desde la raíz de los hitos del JSON
+        # 1. Previsiones de Hitos Automáticos
         for hito_id, info in hitos_dict.items():
             fin_node = info.get("finanzas", {}) if isinstance(info, dict) else {}
             if not fin_node: continue
@@ -271,15 +226,40 @@ class FinanzasTab(QWidget):
             if p_in > 0 or p_out > 0:
                 self.registros_filtrados_cache.append({
                     "hash_id": f"PREV-AUTO-{hito_id}",
-                    "fecha": info.get("fecha_inicio", hoy.strftime("%d/%m/%Y")),
+                    "fecha": info.get("fecha_inicio", hoy.strftime("%Y-%m-%d")),
                     "concepto": f"🔄 Previsión automática: {info.get('nombre_accion', 'Gasto Hito')}",
                     "importe": p_in if p_in > 0 else -p_out,
                     "cuenta": "SISTEMA",
                     "id_hito": hito_id,
-                    "_fecha_dt": datetime.max # Forzar previsiones arriba de la lista siempre
+                    "_fecha_dt": datetime.max,
+                    "ficheros_adjuntos": []
                 })
 
-        # 2. Filtrado con parseo DD/MM/AAAA real del extracto bancario
+        # 2. Previsiones Manuales de Planificación
+        for prev in previsiones_manuales:
+            imp = prev.get("importe", 0.0)
+            if imp > 0: tot_prev_in += imp
+            else: tot_prev_out += abs(imp)
+            
+            try:
+                f_dt = datetime.strptime(prev.get("fecha_impacto", ""), "%Y-%m-%d")
+                f_visual = f_dt.strftime("%d/%m/%Y")
+            except ValueError:
+                f_visual = hoy.strftime("%d/%m/%Y")
+                f_dt = hoy
+
+            self.registros_filtrados_cache.append({
+                "hash_id": prev.get("hash_id"),
+                "fecha": f_visual,
+                "concepto": f"🔮 [Plan] {prev.get('concepto')}",
+                "importe": imp,
+                "cuenta": "SISTEMA",
+                "id_hito": prev.get("id_hito_vinculado"),
+                "_fecha_dt": f_dt,
+                "ficheros_adjuntos": []
+            })
+
+        # 3. Historial Real de Bancos
         for tx in historico_bancario:
             fecha_str = tx.get("fecha", "").strip()
             importe = float(tx.get("importe", 0.0))
@@ -296,44 +276,35 @@ class FinanzasTab(QWidget):
                 if importe > 0: tot_real_in += importe
                 else: tot_real_out += abs(importe)
                 
-            # TIJERETAZO BIMENSUAL (Desde finales de marzo en adelante)
             if fecha_tx >= limite_60_dias:
                 tx_copia = tx.copy()
                 tx_copia["_fecha_dt"] = fecha_tx
                 self.registros_filtrados_cache.append(tx_copia)
 
-        # Ordenar: Previsiones fijas arriba, banco abajo por fecha descendente
-        self.registros_filtrados_cache.sort(key=lambda x: (0 if x.get("cuenta") == "SISTEMA" else 1, x.get("_fecha_dt", datetime.min)), reverse=False)
+        self.registros_filtrados_cache.sort(key=lambda x: (0 if x.get("cuenta") == "SISTEMA" else 1, x.get("_fecha_dt", datetime.min)))
 
-        # Pintar KPIs globales macro de la cabecera
+        # Repintar KPI Scorecards superiores
         neto_p = tot_prev_in - tot_prev_out
         neto_r = tot_real_in - tot_real_out
         desv = neto_r - neto_p
         self.lbl_kpi_previsto.setText(f"{neto_p:.2f} €")
         self.lbl_kpi_real.setText(f"{neto_r:.2f} €")
         self.lbl_kpi_desviacion.setText(f"{desv:+.2f} €")
+        
         self.card_desviacion.setStyleSheet("QFrame { background-color: #e6ffed; border: 2px solid #2da44e; border-radius: 6px; }" if desv >= 0 else "QFrame { background-color: #fee2e2; border: 2px solid #ef4444; border-radius: 6px; }")
         self.lbl_kpi_desviacion.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a7f37;" if desv >= 0 else "font-size: 18px; font-weight: bold; color: #991b1b;")
         
-        # Renderizar el subconjunto según el combo de abanico activo
         self.renderizar_pagina_actual()
 
-    # =====================================================================
-    # MOTOR DE RENDERIZADO BASICO CON ALINEACION VERTICAL SUPERIOR (TOP)
-    # =====================================================================
     def renderizar_pagina_actual(self):
-        """Pinta de forma fluida y ultra-ligera limitando las filas y forzando alineación arriba."""
+        """Pinta la matriz financiera de forma limpia."""
         self.table_finanzas.setSortingEnabled(False)
         self.table_finanzas.setRowCount(0)
         
-        # Determinar límite del abanico del paginador elástico
         seleccion_combo = self.combo_paginacion.currentText()
-        if seleccion_combo == "Todos posterior":
-            limite_filas = len(self.registros_filtrados_cache)
-        else:
-            limite_filas = int(seleccion_combo)
+        limite_filas = len(self.registros_filtrados_cache) if seleccion_combo == "Todos posterior" else int(seleccion_combo)
             
-        lista_hitos_combo = [" [ SIN ASIGNAR ] "] + sorted(list(self.hitos_locales_cache.keys()))
+        lista_hitos_combo = [" [ SIN ASIGNAR ] "] + sorted(list(self.hitos_cache.keys()))
         subconjunto_registros = self.registros_filtrados_cache[:limite_filas]
         
         for local_row_idx, tx in enumerate(subconjunto_registros):
@@ -344,19 +315,19 @@ class FinanzasTab(QWidget):
             concepto_tx = tx.get("concepto", "-")
             hito_assigned = tx.get("id_hito", "")
             importe = float(tx.get("importe", 0.0))
+            adjuntos = tx.get("ficheros_adjuntos", [])
             
             p_in, p_out = (importe, 0.0) if (cuenta_tx == "SISTEMA" and importe > 0) else (0.0, abs(importe) if cuenta_tx == "SISTEMA" else 0.0)
             r_in, r_out = (importe, 0.0) if (cuenta_tx != "SISTEMA" and importe > 0) else (0.0, abs(importe) if cuenta_tx != "SISTEMA" else 0.0)
             
-            if cuenta_tx != "SISTEMA" and hito_assigned in self.hitos_locales_cache:
-                f_node = self.hitos_locales_cache[hito_assigned].get("finanzas", {}) if isinstance(self.hitos_locales_cache[hito_assigned], dict) else {}
+            if cuenta_tx != "SISTEMA" and hito_assigned in self.hitos_cache:
+                f_node = self.hitos_cache[hito_assigned].get("finanzas", {}) if isinstance(self.hitos_cache[hito_assigned], dict) else {}
                 p_in = float(f_node.get("ingresos_previstos", 0.0))
-                p_out = float(f_node.get("gastos_previstos", self.hitos_locales_cache[hito_assigned].get("presupuesto_asignado", 0.0)))
+                p_out = float(f_node.get("gastos_previstos", self.hitos_cache[hito_assigned].get("presupuesto_asignado", 0.0)))
 
-            # --- ID HITO CELL ---
             combo_celda = QComboBox()
             combo_celda.addItems(lista_hitos_combo)
-            combo_celda.setCurrentText(hito_assigned if hito_assigned in self.hitos_locales_cache else " [ SIN ASIGNAR ] ")
+            combo_celda.setCurrentText(hito_assigned if hito_assigned in self.hitos_cache else " [ SIN ASIGNAR ] ")
             combo_celda.setProperty("tx_hash_id", hash_id)
             
             if cuenta_tx == "SISTEMA":
@@ -365,69 +336,224 @@ class FinanzasTab(QWidget):
                 combo_celda.blockSignals(True)
                 combo_celda.currentTextChanged.connect(self.on_celda_hito_cambiado)
                 combo_celda.blockSignals(False)
-                
             self.table_finanzas.setCellWidget(local_row_idx, 0, combo_celda)
             
-            # --- CELL ITEMS CON ALINEACION STRICT TOP (EVITA FILAS DESCOMUNALES) ---
             origen_visual = f"⚙️ {tx.get('fecha')} [PREV]" if cuenta_tx == "SISTEMA" else (f"✍️ {tx.get('fecha')} [MAN]" if cuenta_tx == "MANUAL" else f"📅 {tx.get('fecha')} [{cuenta_tx}]")
             item_origen = QTableWidgetItem(origen_visual)
-            item_origen.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
+            item_origen.setFlags(item_origen.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.table_finanzas.setItem(local_row_idx, 1, item_origen)
             
             item_concepto = QTableWidgetItem(concepto_tx)
-            item_concepto.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
+            item_concepto.setFlags(item_concepto.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.table_finanzas.setItem(local_row_idx, 2, item_concepto)
             
-            # Columnas numéricas
             v_p_in = QTableWidgetItem(f"{p_in:.2f} €" if p_in > 0 else "-")
-            v_p_in.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
+            v_p_in.setFlags(v_p_in.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            v_p_in.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 3, v_p_in)
             
             v_p_out = QTableWidgetItem(f"{p_out:.2f} €" if p_out > 0 else "-")
-            v_p_out.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
+            v_p_out.setFlags(v_p_out.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            v_p_out.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 4, v_p_out)
             
             v_r_in = QTableWidgetItem(f"{r_in:.2f} €" if r_in > 0 else "-")
-            v_r_in.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
+            v_r_in.setFlags(v_r_in.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            v_r_in.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 5, v_r_in)
             
             v_r_out = QTableWidgetItem(f"{r_out:.2f} €" if r_out > 0 else "-")
-            v_r_out.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
+            v_r_out.setFlags(v_r_out.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            v_r_out.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 6, v_r_out)
             
-            # Desviación
             neto_linea = (r_in - r_out) - (p_in - p_out) if cuenta_tx != "SISTEMA" else 0.0
             item_desv = QTableWidgetItem(f"{neto_linea:+.2f} €" if cuenta_tx != "SISTEMA" else "-")
-            item_desv.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
+            item_desv.setFlags(item_desv.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            item_desv.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             if cuenta_tx != "SISTEMA":
                 item_desv.setForeground(QColor("#1a7f37") if neto_linea >= 0 else QColor("#991b1b"))
             self.table_finanzas.setItem(local_row_idx, 7, item_desv)
             
-            # Botón Desvincular
+            txt_fdu = f"📎 ({len(adjuntos)})" if adjuntos else "➕ Adjuntar"
+            item_fdu = QTableWidgetItem(txt_fdu)
+            item_fdu.setFlags(item_fdu.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            item_fdu.setTextAlignment(Qt.AlignCenter | Qt.AlignVertical)
+            if adjuntos:
+                item_fdu.setForeground(QColor("#0969da"))
+            self.table_finanzas.setItem(local_row_idx, 8, item_fdu)
+            
             btn_limbo = QPushButton("🎯 Desvincular")
             btn_limbo.setStyleSheet("font-size: 10px; padding: 2px;")
             if cuenta_tx == "SISTEMA": 
                 btn_limbo.setEnabled(False)
             else: 
                 btn_limbo.clicked.connect(lambda checked=False, h_id=hash_id: self.desvincular_registro_banco(h_id))
-            self.table_finanzas.setCellWidget(local_row_idx, 8, btn_limbo)
+            self.table_finanzas.setCellWidget(local_row_idx, 9, btn_limbo)
 
-        self.table_finanzas.resizeRowsToContents()
+        self.table_finanzas.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        try: self.table_finanzas.customContextMenuRequested.disconnect()
+        except Exception: pass
+        self.table_finanzas.customContextMenuRequested.connect(self.mostrar_menu_contextual_tabla_principal)
+
+        for c in range(self.table_finanzas.columnCount()):
+            if c != 2: self.table_finanzas.resizeColumnToContents(c)
         self.table_finanzas.setSortingEnabled(True)
         self.recargar_balances_interfaz()
+
+    def adjuntar_fichero_temporal_formulario(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Justificante o Factura", "", "Todos (*.md *.pdf *.png *.jpg)")
+        if not file_path: return
+        id_temporal_form = "FINANZAS-PRE-REGISTRO"
+        exito, resultado = self.core.adjuntar_fichero_existente(id_temporal_form, file_path)
+        if exito:
+            self.ficheros_temporales_formulario.append(resultado)
+            self.btn_adjuntar_form.setText(f"📎 Justificante ({len(self.ficheros_temporales_formulario)})")
+            self.btn_adjuntar_form.setStyleSheet("background-color: #e6ffed; color: #1a7f37; font-weight: bold;")
+        else:
+            QMessageBox.critical(self, "Error FDU", resultado)
+
+    def solicitar_importacion_txt(self, tipo_cuenta):
+        ruta_sugerida = self.servicio_caja.ruta_online if tipo_cuenta == "ONLINE" else self.servicio_caja.ruta_ahorro
+        file_path, _ = QFileDialog.getOpenFileName(self, f"Importar Extracto - {tipo_cuenta}", ruta_sugerida, "Archivos (*.txt)")
+        if not file_path: return
+        try:
+            resultado = self.servicio_caja.procesar_txt_extracto(file_path, tipo_cuenta)
+            nuevos = resultado.get('nuevos', 0)
+            duplicados = resultado.get('duplicados', 0)
+            QMessageBox.information(self, "Pasarela Bancaria Sincronizada", f"📊 Extracto ({tipo_cuenta}):\n\n🔹 Nuevos: {nuevos}\n🛡️ Duplicados omitidos: {duplicados}")
+            if self.parent_window: self.parent_window.actualizar_todo()
+        except Exception as e:
+            QMessageBox.critical(self, "Error de Importación", str(e))
+
+    def recargar_balances_interfaz(self):
+        master_data = self.core._load_json(self.core.cronogramas_path)
+        balances = master_data.get("finanzas_globales", {}).get("balances_apertura", {"ONLINE": 0.0, "AHORRO": 0.0})
+        self.lbl_status_banco.setText(f"<b>Apertura de Cuentas:</b> Online: <font color='#0969da'>{balances.get('ONLINE', 0.0):.2f}€</font> | Ahorro: <font color='#1a7f37'>{balances.get('AHORRO', 0.0):.2f}€</font>")
+
+    def procesar_bala_local(self):
+        """Aplica la misma extracción de ID de hito mediante split que tiempo_view.py"""
+        hito_texto = self.combo_vincular_hito.currentText()
+        concepto = self.in_f_concepto.text().strip()
+        cantidad_raw = self.in_f_cantidad.text().strip()
+        
+        if not hito_texto or not concepto or not cantidad_raw: 
+            QMessageBox.warning(self, "Campos Incompletos", "Por favor, selecciona un hito operativo, rellena concepto e importe.")
+            return
+            
+        id_hito = hito_texto.split(" ")[0]
+        try:
+            importe = float(cantidad_raw.replace(",", "."))
+        except ValueError: 
+            QMessageBox.warning(self, "Formato Incorrecto", "El importe debe ser un número válido.")
+            return
+        
+        if "GASTO" in self.combo_f_naturaleza.currentText() and importe > 0: 
+            importe = -importe
+
+        if "PREVISIÓN" in self.combo_f_estado.currentText():
+            fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+            info_h = self.hitos_cache.get(id_hito, {})
+            crono_id = info_h.get("id_cronograma_tipo", "SIPA")
+            tipo_h = "BASICO" if crono_id == "SIPA" else "OPERATIVO"
+            self.servicio_caja.inyectar_prevision_economica(id_hito, tipo_h, concepto, importe, fecha_hoy)
+        else:
+            master_data = self.core._load_json(self.core.cronogramas_path)
+            historico = master_data.setdefault("finanzas_globales", {}).setdefault("historico_bancario", [])
+            historico.append({
+                "hash_id": f"MANUAL-{uuid.uuid4().hex[:8].upper()}",
+                "fecha": datetime.now().strftime("%d/%m/%Y"),
+                "concepto": concepto,
+                "importe": importe,
+                "cuenta": "MANUAL",
+                "id_hito": id_hito,
+                "fecha_importacion": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "ficheros_adjuntos": list(self.ficheros_temporales_formulario)
+            })
+            self.core._save_json(self.core.cronogramas_path, master_data)
+            
+        self.in_f_concepto.clear()
+        self.in_f_cantidad.clear()
+        self.ficheros_temporales_formulario = []
+        self.btn_adjuntar_form.setText("📎 Justificante (0)")
+        self.btn_adjuntar_form.setStyleSheet("")
+        
+        if self.parent_window: self.parent_window.actualizar_todo()
+
+    def mostrar_menu_contextual_tabla_principal(self, posicion):
+        item = self.table_finanzas.itemAt(posicion)
+        if not item: return
+        row = item.row()
+        seleccion_combo = self.combo_paginacion.currentText()
+        limite_filas = len(self.registros_filtrados_cache) if seleccion_combo == "Todos posterior" else int(seleccion_combo)
+        subconjunto = self.registros_filtrados_cache[:limite_filas]
+        if row >= len(subconjunto): return
+        tx = subconjunto[row]
+        if tx.get("cuenta") == "SISTEMA": return
+        
+        hash_id = tx.get("hash_id")
+        adjuntos = tx.get("ficheros_adjuntos", [])
+        
+        menu = QMenu(self)
+        accion_adjuntar = menu.addAction("📎 Adjuntar Justificante / Factura")
+        menu_abrir = menu.addMenu("📂 Abrir Fichero Adjunto") if adjuntos else None
+        if menu_abrir:
+            for arch in adjuntos: menu_abrir.addAction(arch)
+        menu_borrar = menu.addMenu("❌ Desvincular Fichero") if adjuntos else None
+        if menu_borrar:
+            for arch in adjuntos: menu_borrar.addAction(arch)
+
+        accion_seleccionada = menu.exec(self.table_finanzas.mapToGlobal(posicion))
+        if not accion_seleccionada: return
+
+        if accion_seleccionada == accion_adjuntar:
+            self.ejecutar_adjuntado_fdu_directo(hash_id)
+        elif menu_abrir and accion_seleccionada in menu_abrir.actions():
+            self.abrir_fichero_fdu_so(accion_seleccionada.text())
+        elif menu_borrar and accion_seleccionada in menu_borrar.actions():
+            self.eliminar_referencia_fdu_registro(hash_id, accion_seleccionada.text())
+
+    def ejecutar_adjuntado_fdu_directo(self, hash_id):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Asociar Fichero", "", "Formatos (*.md *.pdf *.png *.jpg)")
+        if not file_path: return
+        exito, resultado = self.core.adjuntar_fichero_existente(hash_id, file_path)
+        if exito:
+            master_data = self.core._load_json(self.core.cronogramas_path)
+            for tx in master_data.get("finanzas_globales", {}).get("historico_bancario", []):
+                if tx.get("hash_id") == hash_id:
+                    adjuntos = tx.setdefault("ficheros_adjuntos", [])
+                    if resultado not in adjuntos: adjuntos.append(resultado)
+                    break
+            self.core._save_json(self.core.cronogramas_path, master_data)
+            if self.parent_window: self.parent_window.actualizar_todo()
+
+    def abrir_fichero_fdu_so(self, nombre_archivo):
+        ruta_lista, resultado = self.core.preparar_fichero_para_edicion(nombre_archivo)
+        if not ruta_lista: return
+        if os.name == 'nt': os.startfile(ruta_lista)
+        else: subprocess.Popen(['xdg-open', ruta_lista])
+
+    def eliminar_referencia_fdu_registro(self, hash_id, nombre_archivo):
+        if QMessageBox.question(self, "Quitar Fichero", f"¿Quitar '{nombre_archivo}'?", QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
+            master_data = self.core._load_json(self.core.cronogramas_path)
+            for tx in master_data.get("finanzas_globales", {}).get("historico_bancario", []):
+                if tx.get("hash_id") == hash_id:
+                    if nombre_archivo in tx.get("ficheros_adjuntos", []): tx["ficheros_adjuntos"].remove(nombre_archivo)
+                    break
+            self.core._save_json(self.core.cronogramas_path, master_data)
+            if self.parent_window: self.parent_window.actualizar_todo()
 
     def on_celda_hito_cambiado(self, nuevo_hito_texto):
         combo = self.sender()
         if not combo or not combo.property("tx_hash_id"): return
-        id_hito_final = "" if "SIN ASIGNAR" in nuevo_hito_texto else nuevo_hito_texto
-        
+        id_hito_final = "" if "SIN ASIGNAR" in nuevo_hito_texto else nuevo_hito_texto.split(" ")[0]
         master_data = self.core._load_json(self.core.cronogramas_path)
         for tx in master_data.get("finanzas_globales", {}).get("historico_bancario", []):
             if tx.get("hash_id") == combo.property("tx_hash_id"):
                 tx["id_hito"] = id_hito_final
                 break
         self.core._save_json(self.core.cronogramas_path, master_data)
-        if hasattr(self.window(), 'actualizar_todo'): self.window().actualizar_todo()
+        if self.parent_window: self.parent_window.actualizar_todo()
 
     def desvincular_registro_banco(self, hash_id):
         master_data = self.core._load_json(self.core.cronogramas_path)
@@ -436,37 +562,31 @@ class FinanzasTab(QWidget):
                 tx["id_hito"] = ""
                 break
         self.core._save_json(self.core.cronogramas_path, master_data)
-        if hasattr(self.window(), 'actualizar_todo'): self.window().actualizar_todo()
+        if self.parent_window: self.parent_window.actualizar_todo()
 
-    # =====================================================================
-    # VENTANA DE AUDITORÍA HISTÓRICA CON ENTRADA DE FILTRO SÚPER RÁPIDA
-    # =====================================================================
     def abrir_ventana_auditoria(self):
-        """Consola de asignación en frío con buscador optimizado de texto estático."""
+        """Consola de asignación con buscador optimizado."""
         dialogo = QDialog(self)
-        dialogo.setWindowTitle("Auditoría Histórica Fría - Buscador Dinámico")
-        dialogo.resize(1100, 650)
-        
+        dialogo.setWindowTitle("Auditoría Histórica Fría")
+        dialogo.resize(1150, 650)
         ly_dialogo = QVBoxLayout(dialogo)
         
         ly_buscador = QHBoxLayout()
         ly_buscador.addWidget(QLabel("<b>🔍 Filtrar Historial:</b>"))
         in_buscar = QLineEdit()
-        in_buscar.setPlaceholderText("Escribe concepto, comercio, importe...")
         ly_buscador.addWidget(in_buscar)
         ly_dialogo.addLayout(ly_buscador)
         
         tabla_auditoria = QTableWidget()
-        tabla_auditoria.setColumnCount(4)
-        tabla_auditoria.setHorizontalHeaderLabels(["Hito Vinculado", "Fecha / Cuenta", "Concepto de Extracto", "Importe"])
-        tabla_auditoria.setWordWrap(True)
+        tabla_auditoria.setColumnCount(5)
+        tabla_auditoria.setHorizontalHeaderLabels(["Hito Vinculado", "Fecha / Cuenta", "Concepto de Extracto", "Importe", "Ficheros"])
         tabla_auditoria.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         tabla_auditoria.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         ly_dialogo.addWidget(tabla_auditoria)
         
         master_data = self.core._load_json(self.core.cronogramas_path)
         historico = master_data.get("finanzas_globales", {}).get("historico_bancario", [])
-        lista_hitos = [" [ SIN ASIGNAR ] "] + sorted(list(self.hitos_locales_cache.keys()))
+        lista_hitos = [" [ SIN ASIGNAR ] "] + [f"{h_id} ({self.hitos_cache[h_id].get('nombre_accion', '')[:20]}...)" for h_id in sorted(list(self.hitos_cache.keys()))]
         
         tabla_auditoria.setRowCount(len(historico))
         referencias_filas = []
@@ -479,61 +599,37 @@ class FinanzasTab(QWidget):
             
             c_combo = QComboBox()
             c_combo.addItems(lista_hitos)
-            c_combo.setCurrentText(hito_asig if hito_asig in self.hitos_locales_cache else " [ SIN ASIGNAR ] ")
-            c_combo.setProperty("hash_id", hash_id)
+            
+            texto_inicial = " [ SIN ASIGNAR ] "
+            if hito_asig in self.hitos_cache:
+                texto_inicial = f"{hito_asig} ({self.hitos_cache[hito_asig].get('nombre_accion', '')[:20]}...)"
+            c_combo.setCurrentText(texto_inicial)
             
             def al_cambiar_historico(txt, h_id=hash_id):
-                final_hito = "" if "SIN ASIGNAR" in txt else txt
+                final_hito = "" if "SIN ASIGNAR" in txt else txt.split(" ")[0]
                 m_data = self.core._load_json(self.core.cronogramas_path)
                 for t in m_data.get("finanzas_globales", {}).get("historico_bancario", []):
-                    if t.get("hash_id") == h_id:
-                        t["id_hito"] = final_hito
-                        break
+                    if t.get("hash_id") == h_id: t["id_hito"] = final_hito; break
                 self.core._save_json(self.core.cronogramas_path, m_data)
             
             c_combo.currentTextChanged.connect(al_cambiar_historico)
             tabla_auditoria.setCellWidget(row, 0, c_combo)
             
             txt_origen = f"{tx.get('fecha')} [{tx.get('cuenta')}]"
-            
-            # Items estáticos alineados estricto arriba para velocidad
-            i_origen = QTableWidgetItem(txt_origen)
-            i_origen.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
-            tabla_auditoria.setItem(row, 1, i_origen)
-            
-            i_concepto = QTableWidgetItem(concepto_clean)
-            i_concepto.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
-            tabla_auditoria.setItem(row, 2, i_concepto)
+            tabla_auditoria.setItem(row, 1, QTableWidgetItem(txt_origen))
+            tabla_auditoria.setItem(row, 2, QTableWidgetItem(concepto_clean))
             
             item_imp = QTableWidgetItem(f"{importe_clean:.2f} €")
-            item_imp.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
             item_imp.setForeground(QColor("#1a7f37") if importe_clean >= 0 else QColor("#991b1b"))
             tabla_auditoria.setItem(row, 3, item_imp)
             
-            referencias_filas.append({
-                "row_idx": row,
-                "texto_busqueda": f"{concepto_clean} {txt_origen} {importe_clean}".lower()
-            })
+            referencias_filas.append({"row_idx": row, "hash_id": hash_id, "texto_busqueda": f"{concepto_clean} {txt_origen}".lower()})
             
-        tabla_auditoria.resizeRowsToContents()
-        
-        def filtrar_tabla_historica(texto_nuevo):
-            query = texto_nuevo.lower().strip()
-            tabla_auditoria.setUpdatesEnabled(False)
-            for ref in referencias_filas:
-                if not query or query in ref["texto_busqueda"]:
-                    tabla_auditoria.setRowHidden(ref["row_idx"], False)
-                else:
-                    tabla_auditoria.setRowHidden(ref["row_idx"], True)
-            tabla_auditoria.setUpdatesEnabled(True)
-
-        in_buscar.textChanged.connect(filtrar_tabla_historica)
+        in_buscar.textChanged.connect(lambda t: [tabla_auditoria.setRowHidden(r["row_idx"], not (not t.strip() or t.lower() in r["texto_busqueda"])) for r in referencias_filas])
         
         btn_cerrar = QPushButton("💾 Sincronizar Cambios de Auditoría")
-        btn_cerrar.setStyleSheet("background-color: #0969da; color: white; font-weight: bold; padding: 6px;")
         btn_cerrar.clicked.connect(dialogo.accept)
         ly_dialogo.addWidget(btn_cerrar)
         
-        if dialogo.exec() == QDialog.Accepted:
-            if hasattr(self.window(), 'actualizar_todo'):
-                self.window().actualizar_todo()
+        if dialogo.exec() == QDialog.Accepted and self.parent_window:
+            self.parent_window.actualizar_todo()

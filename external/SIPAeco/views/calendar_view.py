@@ -5,9 +5,11 @@ SIPAeco GUI - Vista del Calendario Dinámico, Cíclico y Relacional (POO)
 Ubicación: SIPA/external/SIPAeco/views/calendar_view.py
 Autor: Daniel Miñana Montero
 Descripción: Módulo de interfaz desacoplado que gestiona los tres motores de visualización.
-             CORRECCIONES: 
+             CORRECCIONES E INTEGRACIÓN FINANCIERA: 
              - Reducción de fuentes en títulos del sidebar para evitar desbordamientos.
              - Motor de balances existenciales 100% dinámico y vinculado al rango visible.
+             - INTEGRACIÓN CAJA: Acoplamiento con SESIPAecoCalendarService para pintar saldos diarios
+               (Reales y Previsiones) en Mes, Semana y Día.
 """
 
 import calendar
@@ -35,6 +37,13 @@ class CalendarioSemanaTab(QWidget):
         super().__init__(parent_window)
         self.core = core_base
         self.parent_window = parent_window
+        
+        # Conexión directa con el motor matemático y financiero del calendario
+        # (Asume que está registrado en el core, si no, se puede instanciar directamente)
+        self.cal_service = getattr(self.core, "calendar_service", None)
+        if not self.cal_service:
+            from core.services.sesipaeco_calendar import SESIPAecoCalendarService
+            self.cal_service = SESIPAecoCalendarService(self.core)
         
         # Fecha de pivote operativa local
         self.fecha_pivote = datetime.now()
@@ -155,7 +164,6 @@ class CalendarioSemanaTab(QWidget):
         linea.setStyleSheet("color: #e2e8f0;")
         layout_side.addWidget(linea)
         
-        # CORRECCIÓN DE ESTILOS: Títulos más pequeños (font-size: 10px) para evitar desbordamiento horizontal
         lbl_t1 = QLabel("Frecuencia Base Analizada:")
         lbl_t1.setStyleSheet("font-size: 10px; color: #475569; font-weight: 500;")
         self.lbl_val_base_bruta = QLabel("0 minutos")
@@ -247,10 +255,11 @@ class CalendarioSemanaTab(QWidget):
         return True
 
     def renderizar_motores_calendario(self):
-        master_data = self.core._load_json(self.core.cronogramas_path)
+        # 1. OBTENER RANGO SEMANAL DE LA VISTA OPERATIVA
+        lunes_act, domingo_act = self.cal_service.obtener_rango_semanal(self.fecha_pivote)
         
-        cronogramas = master_data.get("cronogramas", {})
-        hitos_instanciados = master_data.get("hitos_instanciados", {})
+        # 2. CARGA UNIFICADA DE IMPACTOS REALES DESDE EL SERVICIO REPARADO
+        semana_data, _, _ = self.cal_service.obtener_impactos_tiempo_semana(self.fecha_pivote)
         
         color_map = {
             "PLAN_MAESTRO": "#e0f2fe", "SOCIAL": "#fef3c7", "SALUD": "#fee2e2", "DEFECTO": "#f1f5f9"
@@ -261,48 +270,39 @@ class CalendarioSemanaTab(QWidget):
 
         hitos_planos = []
         
-        for crono_id, info in cronogramas.items():
-            for hito in info.get("hitos", []):
-                hitos_planos.append({
-                    "crono": crono_id, 
-                    "id": hito.get("id"), 
-                    "nombre": hito.get("nombre"), 
-                    "proyecto": hito.get("proyecto"),
-                    "inicio": datetime.strptime(hito.get("fecha_inicio"), "%Y-%m-%d") if hito.get("fecha_inicio") else self.fecha_pivote,
-                    "fin": datetime.strptime(hito.get("fecha_fin"), "%Y-%m-%d") if hito.get("fecha_fin") else self.fecha_pivote,
-                    "horas": float(hito.get("horas_estimadas", 0)),
-                    "prioridad": hito.get("prioridad", "3 - MEDIA"),
-                    "repetitivo": hito.get("repetitivo", False),
-                    "dias_ciclo": hito.get("dias_ciclo", [])
-                })
-                
-        for h_id, info in hitos_instanciados.items():
-            crono_vinc = info.get("id_cronograma", "DEFECTO")
-            f_ini_str = info.get("fecha_inicio", datetime.now().strftime("%Y-%m-%d"))
-            f_fin_str = info.get("fecha_fin", datetime.now().strftime("%Y-%m-%d"))
-            try:
-                dt_ini = datetime.strptime(f_ini_str[:10], "%Y-%m-%d")
-                dt_fin = datetime.strptime(f_fin_str[:10], "%Y-%m-%d")
-            except ValueError:
-                dt_ini = self.fecha_pivote
-                dt_fin = self.fecha_pivote
+        # Mapeamos los impactos semanales devueltos por el servicio a la estructura de la vista
+        for dia_idx, impactos_dia in semana_data.items():
+            for imp in impactos_dia:
+                f_ini_str = imp.get("fecha_inicio", "")
+                try:
+                    dt_ini = datetime.strptime(f_ini_str[:10], "%Y-%m-%d")
+                except ValueError:
+                    dt_ini = self.fecha_pivote
 
-            hitos_planos.append({
-                "crono": crono_vinc,
-                "id": h_id,
-                "nombre": info.get("nombre_accion", "Acción"),
-                "proyecto": info.get("id_proyecto", "SIPA"),
-                "inicio": dt_ini,
-                "fin": dt_fin,
-                "horas": float(info.get("horas_estimadas", 0.0)),
-                "prioridad": info.get("prioridad", "3 - MEDIA"),
-                "repetitivo": info.get("repetitivo", False),
-                "dias_ciclo": info.get("dias_ciclo", [])
-            })
+                hitos_planos.append({
+                    "crono": imp.get("id_cronograma_tipo", "DEFECTO"),
+                    "id": imp.get("id_sesion_unico", "IMPACTO"),
+                    "nombre": imp.get("nombre_accion", "Acción"),
+                    "proyecto": imp.get("id_proyecto", "SIPA"),
+                    "inicio": dt_ini,
+                    "fin": dt_ini, # Es un impacto discreto diario
+                    "horas": float(imp.get("horas_estimadas", 0.0)),
+                    "prioridad": imp.get("prioridad", "3 - MEDIA"),
+                    "repetitivo": False,
+                    "dias_ciclo": []
+                })
 
         # Inicialización de rango contextual para el cálculo existencial dinámico
-        fecha_inicio_vista = self.fecha_pivote
-        fecha_fin_vista = self.fecha_pivote
+        if self.btn_vista_mes.isChecked():
+            fecha_inicio_vista = datetime(self.fecha_pivote.year, self.fecha_pivote.month, 1)
+            dias_del_mes = calendar.monthrange(self.fecha_pivote.year, self.fecha_pivote.month)[1]
+            fecha_fin_vista = datetime(self.fecha_pivote.year, self.fecha_pivote.month, dias_del_mes)
+        elif self.btn_vista_sem.isChecked():
+            fecha_inicio_vista = lunes_act
+            fecha_fin_vista = domingo_act
+        else:
+            fecha_inicio_vista = self.fecha_pivote
+            fecha_fin_vista = self.fecha_pivote
 
         # -----------------------------------------------------------------
         # MOTOR 1: VISTA MES
@@ -344,6 +344,9 @@ class CalendarioSemanaTab(QWidget):
                 layout_f_sem.addWidget(lbl_num_sem)
                 self.grid_mes_layout.addWidget(frame_sem, fila, 0)
                 
+                # Extraemos finanzas de la semana actual del bucle mensual para mapear celdas
+                finanzas_semana_map = self.cal_service.obtener_finanzas_semana(fecha_iteracion)
+
                 for col in range(1, 8):
                     f_dia = datetime(fecha_iteracion.year, fecha_iteracion.month, fecha_iteracion.day)
                     celda_widget = ClickableFrame(callback=lambda f=f_dia: self.saltar_a_vista_dia_desde_fecha(f))
@@ -363,9 +366,25 @@ class CalendarioSemanaTab(QWidget):
                     layout_celda.setContentsMargins(3, 3, 3, 3)
                     layout_celda.setSpacing(2)
                     
+                    # Layout horizontal superior para el número de día y saldo mini
+                    layout_cabecera_celda = QHBoxLayout()
                     lbl_num_dia = QLabel(str(fecha_iteracion.day))
                     lbl_num_dia.setStyleSheet("font-size: 9px; font-weight: bold; color: #475569; border: none;")
-                    layout_celda.addWidget(lbl_num_dia)
+                    layout_cabecera_celda.addWidget(lbl_num_dia)
+                    
+                    # Inyección Financiera en la Celda del Mes
+                    idx_semana_dia = fecha_iteracion.weekday()
+                    data_eco_dia = finanzas_semana_map.get(idx_semana_dia, {"ingresos": 0.0, "gastos": 0.0})
+                    neto_dia = data_eco_dia["ingresos"] - data_eco_dia["gastos"]
+                    
+                    if neto_dia != 0:
+                        lbl_neto_mini = QLabel(f"{'+' if neto_dia > 0 else ''}{neto_dia:.0f}€")
+                        color_neto = "#2da44e" if neto_dia > 0 else "#cf222e"
+                        lbl_neto_mini.setStyleSheet(f"font-size: 8px; font-weight: bold; color: {color_neto}; border: none;")
+                        lbl_neto_mini.setAlignment(Qt.AlignmentFlag.AlignRight)
+                        layout_cabecera_celda.addWidget(lbl_neto_mini)
+                        
+                    layout_celda.addLayout(layout_cabecera_celda)
                     
                     count_hitos = 0
                     for h in hitos_planos:
@@ -398,6 +417,9 @@ class CalendarioSemanaTab(QWidget):
                 child = self.layout_semana_columnas.takeAt(0)
                 if child.widget(): child.widget().deleteLater()
                 
+            # Extraer finanzas consolidadas para esta semana desde el servicio
+            finanzas_semana = self.cal_service.obtener_finanzas_semana(self.fecha_pivote)
+
             dias_nombre = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
             for i in range(7):
                 dia_actual = fecha_inicio_vista + timedelta(days=i)
@@ -414,7 +436,16 @@ class CalendarioSemanaTab(QWidget):
                 layout_col.setContentsMargins(4, 5, 4, 5)
                 layout_col.setSpacing(4)
                 
-                lbl_tit_col = QLabel(f"<b>{dias_nombre[i]}</b><br><font color='#64748b'>{dia_actual.strftime('%d %b')}</font>")
+                # Renderizar Cabecera de Columna Semanal incluyendo flujo de caja
+                eco_dia = finanzas_semana.get(i, {"ingresos": 0.0, "gastos": 0.0})
+                neto_semanal_dia = eco_dia["ingresos"] - eco_dia["gastos"]
+                
+                str_eco = ""
+                if neto_semanal_dia != 0:
+                    color_txt = "#2da44e" if neto_semanal_dia > 0 else "#cf222e"
+                    str_eco = f"<br><span style='font-size:9px; font-weight:bold; color:{color_txt};'>{'▲' if neto_semanal_dia > 0 else '▼'} {neto_semanal_dia:.1f}€</span>"
+
+                lbl_tit_col = QLabel(f"<b>{dias_nombre[i]}</b><br><font color='#64748b'>{dia_actual.strftime('%d %b')}</font>{str_eco}")
                 lbl_tit_col.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 lbl_tit_col.setStyleSheet("font-size: 11px; border:none; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;")
                 layout_col.addWidget(lbl_tit_col)
@@ -457,6 +488,38 @@ class CalendarioSemanaTab(QWidget):
             layout_muro_diario.setContentsMargins(15, 15, 15, 15)
             layout_muro_diario.setSpacing(10)
             
+            # --- EXTRACTO DE COMPORTAMIENTO FINANCIERO DIARIO ---
+            finanzas_hoy = self.cal_service.obtener_finanzas_semana(self.fecha_pivote)
+            idx_hoy = self.fecha_pivote.weekday()
+            data_hoy = finanzas_hoy.get(idx_hoy, {"ingresos": 0.0, "gastos": 0.0, "detalles": []})
+            
+            if data_hoy["detalles"]:
+                frame_finanzas_dia = QFrame()
+                frame_finanzas_dia.setStyleSheet("""
+                    QFrame { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; }
+                """)
+                layout_f_hoy = QVBoxLayout(frame_finanzas_dia)
+                layout_f_hoy.setContentsMargins(10, 10, 10, 10)
+                
+                neto_hoy = data_hoy["ingresos"] - data_hoy["gastos"]
+                color_neto = "#2da44e" if neto_hoy >= 0 else "#cf222e"
+                
+                lbl_tit_f = QLabel(f"<b>💰 FLUJO DE CAJA DEL DÍA: <span style='color:{color_neto};'>{neto_hoy:,.2f} €</span></b>")
+                lbl_tit_f.setStyleSheet("font-size: 11px; border: none;")
+                layout_f_hoy.addWidget(lbl_tit_f)
+                
+                for det in data_hoy["detalles"]:
+                    lbl_det = QLabel(
+                        f"• [{det['tipo']}] {det['concepto']}: "
+                        f"<b><span style='color:{'#2da44e' if det['importe'] >= 0 else '#cf222e'};'>"
+                        f"{det['importe']:+,.2f} €</span></b>"
+                    )
+                    lbl_det.setStyleSheet("font-size: 10px; color: #334155; border: none;")
+                    layout_f_hoy.addWidget(lbl_det)
+                    
+                layout_muro_diario.addWidget(frame_finanzas_dia)
+            
+            # --- CARGA DE HITOS ESTRATÉGICOS ---
             hitos_del_dia = [h for h in hitos_planos if self.hito_aplica_para_fecha(h, self.fecha_pivote)]
             hitos_del_dia.sort(key=lambda x: self.peso_prioridad.get(x["prioridad"], 3))
             
@@ -558,7 +621,6 @@ class CalendarioSemanaTab(QWidget):
         self.lbl_val_canibalizados.setText(f"{minutos_comprometidos:,} min ({(minutos_comprometidos/60):.2f} h)".replace(",", "."))
         self.lbl_val_fisiologico.setText(f"{reserva_fisiologica_periodo:,} min ({(reserva_fisiologica_periodo/60):.2f} h)".replace(",", "."))
         self.lbl_val_liquido.setText(f"{tiempo_liquido_periodo:,} min ({(tiempo_liquido_periodo/60):.2f} h)".replace(",", "."))
-
     def update_tab_data(self):
         """Punto de entrada de sincronización estándar invocado por el orquestador principal."""
         self.renderizar_motores_calendario()

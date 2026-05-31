@@ -1,0 +1,48 @@
+HITOS
+
+Los hitos se definen de dos tipos:
+
+- básicos
+- operativos
+
+Necesitamos un check, para definir el tipo por default operativo, y te explico:
+
+- Básico son los hitos de vida, alimentación mensual, vivienda sea alquiler o hipoteca, prestamo coche, prestamo moto, gas, luz, agua, comunicaciones personales, comunicaciones profesionales, alquiler despacho, autonomo, cualquier hito que represente una accion mensual, ya sea pago, ya sea atención ya sea traslado eso son hitos básicos y la diferencia es que su fecha de fin no esta definida y seran aplicados la mayoria a hitos mensuales, deberian aparecer una sola vez en el dia que le corresponda mensualmente en el calendario.
+
+- Operativos, son hitos que estan estipulados en un cronograma y se rigen por una fecha de inicio y fin, lo importante es completarlos, es señal de que el cronograma avanza por lo tanto avanza el proyecto.
+
+---
+
+Tras esta explicacion los campos necesarios son:
+
+- Seleccionar proyecto (Deben ser modificable desde la tabla)
+- Seleccionar cronograma (Deben ser modificable desde la tabla)
+- id nuclear para el hito (no modificable)
+- fecha de registro (cuando se inserta en el sistema)
+- fecha de inicio ( cuando se tiene pensado iniciarlo)
+- fecha de fin (cuando esta previsto acabarlo)
+- Horas previstas para conseguirlo ( empezamos con el registro de datos para prevision )
+- Coste estimado previsto en tiempo ( aqui es donde quiero trabajar lo primero cuando leas esto, breve y hablamos de ello)
+- Ingreso estimado previsto en dinero ( Si hay pactado algo, o se puede valorar el retorno, marketing de mi perfil profesional por ejemplo)
+- Resultado esperado ( Una simple resta ingreso menos coste previsto resultado previsto esperado)
+- Notas (Espacio para una nota simple )
+- Estado ( Aunque esto lo gestiona de maravilla en el informe si se crea ya con el estado, aunque luego en el informe se pueda gestionar seria perfecto)
+- Prioridad ( En necesario decirle la prisa que corre, y sobre todo en informe lo ajustas perfectamente y organizas las tarjetas)
+- Impactos recibidos, un registro o enlace a una tabla que recoga todos los impactos tanto en tiempo como en dinero.
+
+Con esto creo que esta todo, veras que es algo diferente a lo que tenemos pero me es necesario, te anticipo lo que necesito para impactos en tiempo, y para impactos dinero:
+
+Impacto tiempo:
+
+- Id nuclear
+- Seleccionar hito
+- Seleccionar cronograma automaticamente, (Solo ver)
+- fecha impacto - prevista ( asi tendria la capacidad de generarme una agenda perfecta, porque calendario tiene que dejar de incluir los hitos y centrarse en incluir los impactos tanto en tiempo como en dinero, ese fue mi error, los hitos si son significativos pero no son funcionales en el calendario, los impactos o acciones si, y si encima de que se incluyen en el calendario puedes crear impacto a fechas futuras me monto la agenda completamente privada, y gestiono mi tiempo porque la genialidad que hemos creado me indica cuando tengo que parar de asignarle faenas a un dia)
+- Detalle impacto (Descripcion de la accion o acciones realizadas o a realizar y el resultado, hay impactos que igual que los calibres de la municion varian, hay impacto de pistola que con esta nota sera suficiente, y hay impacto de misil que necesitara una bitacora o un acta o una tprofesional)
+- Estado ( Diferentes estado que tenga el impacto, planificado, en proceso, completado, suspendido, cancelado deberiamos estandarizar este dato para toda la aplicacion)
+- Archivos vinculados ( Puede ser que necesite vincular archivos al impacto, documentar siempre es bueno, entonces habria que poder vincular ficheros de la FDU fuente de datos unica, ya llegaremos si no te acuerdas, con enlaces y el sistema de edicion que SIPA establece)
+- Crear archivo ( Esta capacidad se la di o pensaba darsela al hito pero la mejor ubicacion es esta, es el impacto el que decide que tipo de documentacion necesita, por lo tanto la creacion de archivos a traves de unas plantillas, que ya lo hicimos funcionar y quedo perfecto desde hitos, no era su sitio correcto, aqui si)
+- Tiempo aplicado ( Tiempo empleado desde inicio hasta fin o hasta suspender par despues reiniciar)
+
+Espero que me hayas comprendido hasta aqui, y ahora te paso la final flujo de caja, casi que prefiero esperarme te avanzado el impacto cuando estamos todavia trabajando en los hitos, espero eso que me entiendas y que podamos empezar a incluir estas necesiades, breve y empezamos por la nota que he dejado?
+-
