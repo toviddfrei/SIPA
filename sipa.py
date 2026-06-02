@@ -1,10 +1,13 @@
-# ==========================================================
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ==========================================================================
 # PROYECTO SIPA - Sistema identificación personal autorizada
 # Archivo: sipa.py
 # Módulo: Core Dashboard / SPA Horizontal Manager (Browser Style)
-# Versión: 2.5.0.0 | Fecha: 26/05/2026
+# Versión: 2.6.0.0 | Fecha: 2026-06-02
 # Autor: Daniel Miñana Montero & Gemini
-# ==========================================================
+# Descripción: Integración directa de la suite económica SIPAeco.
+# ==========================================================================
 
 import sys
 import os
@@ -63,6 +66,8 @@ except ImportError as e:
 # =================================================================
 RUTA_SIPACUR   = SIPARouterGateway.obtener_ruta("external", "SIPAcur")
 RUTA_SERVICIOS = SIPARouterGateway.obtener_ruta("core", "services")
+# 💳 Inyección de la pasarela para la Suite Económica
+RUTA_SIPAECO   = SIPARouterGateway.obtener_ruta("external", "SIPAeco") 
 # =================================================================
 
 print("\n" + "="*60)
@@ -86,7 +91,7 @@ except ImportError:
 
 try:
     from ssipa_edit_markdown import SIPAMarkdownEditor
-    print("🟢 Componente Core: 'SIPAMarkdownEditor' acoplado con éxito.")
+    print("🟢 Componente Core: 'SIPAMarkdownEditor' acoplada con éxito.")
 except ImportError:
     print("⚠️  Componente Visual: 'SIPAMarkdownEditor' no disponible.")
     SIPAMarkdownEditor = None
@@ -104,6 +109,14 @@ try:
 except ImportError:
     print("⚠️  Componente Visual: 'ConfigEditorNode' no disponible.")
     ConfigEditorNode = None
+
+# 💳 ACOPLAMIENTO CENTRAL DE LA EXTENSIÓN ECONÓMICA SIPAeco
+try:
+    from sipaeco import SIPAecoMainDashboard
+    print("🟢 Módulo Económico: 'SIPAecoMainDashboard' acoplado con éxito en el Core.")
+except ImportError:
+    print("⚠️  Componente Visual: 'SIPAecoMainDashboard' no disponible en las rutas.")
+    SIPAecoMainDashboard = None
 
 # IMPORTACIÓN DE LA PASARELA DE ACCESO AUTORIZADO (SIPAbap Services)
 try:
@@ -126,13 +139,15 @@ else:
 
 QSS_FILE_PATH = SIPARouterGateway.obtener_ruta("sipa_styles.qss")
 
+# 🔒 MATRIZ DE SEGURIDAD EXTENDIDA (Mapeo de accesos mínimos según rol)
 MATRIZ_PERMISOS = {
     0: 0,  # Dashboard
     1: 2,  # Editor MD
     2: 1,  # IA SIPAcur
-    3: 3,  # Servicios / Monitor
-    4: 2,  # Huella Digital
-    5: 5   # Configuración del Sistema
+    3: 2,  # 📈 SIPAeco Finanzas (Nivel de Operación Estándar 2)
+    4: 3,  # Servicios / Monitor
+    5: 2,  # Huella Digital
+    6: 5   # Configuración del Sistema
 }
 
 def extraer_identidad():
@@ -148,7 +163,6 @@ def extraer_identidad():
     try:
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
-            # Extraer Metadatos del Front Matter
             meta_match = re.search(r'---\s*\n(.*?)\n---', content, re.DOTALL)
             if meta_match:
                 block = meta_match.group(1)
@@ -160,7 +174,6 @@ def extraer_identidad():
                             if key == "tipo_user": datos[key] = int(val)
                             else: datos[key] = val
             
-            # Buscar Fecha Nacimiento en el cuerpo del Markdown
             nac_match = re.search(r'Fecha nacimiento:\s*([\d/]+)', content)
             if nac_match:
                 datos["fecha_nacimiento"] = nac_match.group(1)
@@ -216,11 +229,12 @@ class ServiceCard(QFrame):
         layout.addWidget(self.btn_manage)
 
 class VistaDashboard(QWidget):
-    def __init__(self, identidad, user_level, callback_config, parent=None):
+    def __init__(self, identidad, user_level, callback_config, callback_eco, parent=None):
         super().__init__(parent)
         self.identidad = identidad
         self.user_level = user_level
         self.callback_config = callback_config
+        self.callback_eco = callback_eco
         
         layout_visual = QVBoxLayout(self)
         layout_visual.setContentsMargins(0, 10, 0, 0)
@@ -245,11 +259,14 @@ class VistaDashboard(QWidget):
         status_serv = "ACTIVO (OK)" if service_exists else "DESCONECTADO"
         detail_serv = f"Ruta: core/services/ssipa_config.py\nEntorno: Reutilización Markdown Activa"
         
+        # Estado dinámico para la tarjeta de control de SIPAeco
+        status_eco = "ACTIVO (OK)" if SIPAecoMainDashboard else "DESHABILITADO"
+
         cards_data = [
             ("Identidad Propietario", "ACTIVO", f"Operador: {self.identidad['nombre']} {self.identidad['apellido_1']}\nNivel Acreditado: Lvl {self.user_level}", 0, None),
+            ("Gestión Financiera (SIPAeco)", status_eco, "Control de caja elástica, pasarela bancaria y agenda predictiva de impactos temporales.", 2, self.callback_eco),
             ("Configuración Sistema", status_serv, detail_serv, 5, self.callback_config),
             ("Motor de Vigilancia", "STANDBY", "Escaneando procesos en segundo plano...", 1, None),
-            ("Análisis Forense", "DENEGADO", "Módulo restringido. Requiere nivel 4+", 4, None),
             ("Backup de Núcleo", "LISTO", "Protección de datos asíncrona activa", 3, None)
         ]
         
@@ -266,7 +283,7 @@ class SIPADashboard(QWidget):
     """
     def __init__(self, parent_window=None, app_name_md="SIPA SYSTEM"):
         super().__init__()
-        self.parent_window = parent_window  # Guardamos la referencia de la ventana raíz real
+        self.parent_window = parent_window  
         self.identidad = {"nombre": "Cargando...", "apellido_1": "", "tipo_user": 0, "nombre_app": app_name_md, "fecha_nacimiento": "-"}
         self.user_level = 0
         
@@ -274,7 +291,6 @@ class SIPADashboard(QWidget):
         self.cargar_sistema()
 
     def init_ui(self):
-        # Layout Estructural Absoluto (Vertical: Cabecera -> Contenido -> Footer)
         self.layout_principal = QVBoxLayout(self)
         self.layout_principal.setContentsMargins(0, 0, 0, 0)
         self.layout_principal.setSpacing(0)
@@ -288,10 +304,8 @@ class SIPADashboard(QWidget):
         layout_navbar_completo.setContentsMargins(15, 10, 15, 10)
         layout_navbar_completo.setSpacing(8)
 
-        # --- FILA SUPERIOR: MARCA Y CONTROLES CRÍTICOS ---
         fila_superior = QHBoxLayout()
         
-        # Lado Izquierdo: Identidad de Marca
         self.lbl_logo = QLabel("🛡️")
         self.lbl_logo.setStyleSheet("font-size: 18px; margin-right: 5px;")
         self.lbl_brand_name = QLabel("SIPA")
@@ -312,39 +326,38 @@ class SIPADashboard(QWidget):
         fila_superior.addWidget(self.lbl_user_identity)
         fila_superior.addStretch()
 
-        # --- Lado Derecho de la Fila Superior ---
         self.btn_menu = QPushButton("☰")
         self.btn_menu.setFixedWidth(40)
         self.btn_menu.setCursor(Qt.PointingHandCursor)
         self.btn_menu.setStyleSheet("background-color: #262626; border: 1px solid #333; color: #888;")
-        # 🔗 CONECTAMOS EL MENÚ HAMBURGUESA AL LOGOUT SEGURO
         self.btn_menu.clicked.connect(self.ejecutar_logout_operador)
         
         self.btn_shutdown = QPushButton("🔒 APAGAR")
         self.btn_shutdown.setFixedWidth(100)
         self.btn_shutdown.setCursor(Qt.PointingHandCursor)
         self.btn_shutdown.setStyleSheet("background-color: #721C24; color: #F8D7DA; border: 1px solid #F5C6CB; font-size: 11px;")
-        # Vinculación directa al close() de la ventana física real en RAM
         self.btn_shutdown.clicked.connect(lambda: self.parent_window.close() if self.parent_window else sys.exit(0))
 
         fila_superior.addWidget(self.btn_menu)
         fila_superior.addWidget(self.btn_shutdown)
         layout_navbar_completo.addLayout(fila_superior)
 
-        # --- FILA INFERIOR: BOTONERA DE PESTAÑAS (TIPO NAVEGADOR) ---
+        # --- FILA INFERIOR: BOTONERA DE PESTAÑAS EXTENDIDA ---
         self.fila_pestanas = QHBoxLayout()
         self.fila_pestanas.setSpacing(5)
         
         self.btn_dash = QPushButton("📊  Dashboard")
         self.btn_editor = QPushButton("📝  Editor MD")
         self.btn_sipacur = QPushButton("🧠  IA SIPAcur")
+        self.btn_sipaeco = QPushButton("📈  Finanzas") # 🪙 Nuevo disparador nativo en navbar
         self.btn_serv = QPushButton("⚙️  Servicios")
         self.btn_huella = QPushButton("🛡️  Huella Digital") 
         self.btn_conf = QPushButton("🛠  Configuración")
         
+        # Mapeado secuencial de índices del Stacked Widget
         self.menu_items = [
             (self.btn_dash, 0), (self.btn_editor, 1), (self.btn_sipacur, 2),
-            (self.btn_serv, 3), (self.btn_huella, 4), (self.btn_conf, 5)
+            (self.btn_sipaeco, 3), (self.btn_serv, 4), (self.btn_huella, 5), (self.btn_conf, 6)
         ]
 
         for btn, idx in self.menu_items:
@@ -395,7 +408,7 @@ class SIPADashboard(QWidget):
         self.lbl_foot_propietario = QLabel("Nacimiento Propietario: --/--/----")
         self.lbl_foot_propietario.setStyleSheet("color: #555; font-family: 'Consolas'; font-size: 11px;")
         
-        self.lbl_foot_version = QLabel("Kernel Core: SIPA v1.5")
+        self.lbl_foot_version = QLabel("Kernel Core: SIPA v1.6")
         self.lbl_foot_version.setStyleSheet("color: #00FF95; font-family: 'Consolas'; font-size: 11px; font-weight: bold;")
         
         layout_footer.addWidget(self.lbl_foot_app)
@@ -406,7 +419,6 @@ class SIPADashboard(QWidget):
         
         self.layout_principal.addWidget(self.footer_frame)
 
-        # Activar el primer botón por defecto
         self.btn_dash.setChecked(True)
 
     def aplicar_control_accesos(self):
@@ -425,13 +437,17 @@ class SIPADashboard(QWidget):
         self.identidad, _ = extraer_identidad()
         self.user_level = self.identidad["tipo_user"]
         
-        # Volcar datos al Header y Footer
         self.lbl_user_identity.setText(f"{self.identidad['nombre']} {self.identidad['apellido_1']} [Lvl {self.user_level}]")
         self.lbl_foot_app.setText(f"Instancia: {self.identidad['nombre_app'].upper()}")
         self.lbl_foot_propietario.setText(f"Nacimiento Propietario: {self.identidad['fecha_nacimiento']}")
         
         # --- ACOPLAMIENTO DE MÓDULOS AL STACKED WIDGET ---
-        self.vista_dashboard = VistaDashboard(self.identidad, self.user_level, self.ir_a_configuracion_directa)
+        self.vista_dashboard = VistaDashboard(
+            self.identidad, 
+            self.user_level, 
+            self.ir_a_configuracion_directa,
+            self.ir_a_finanzas_directa
+        )
         
         if SIPAMarkdownEditor: self.vista_editor = SIPAMarkdownEditor()
         else: self.vista_editor = QLabel("❌ Error: No se pudo cargar 'ssipa_edit_markdown.py'.")
@@ -439,6 +455,10 @@ class SIPADashboard(QWidget):
         if SIPAcurDashboard: self.vista_sipacur = SIPAcurDashboard()
         else: self.vista_sipacur = QLabel("❌ Error: 'sipacur.py' no encontrado.")
             
+        # Inicialización nativa de SIPAeco delegando la gestión de refrescos al Router Core
+        if SIPAecoMainDashboard: self.vista_sipaeco = SIPAecoMainDashboard()
+        else: self.vista_sipaeco = QLabel("❌ Error: Módulo 'sipaeco.py' no disponible en el árbol.")
+
         if VistaServicios: self.vista_servicios = VistaServicios()
         else: self.vista_servicios = QLabel("❌ Error: 'ssipa_servicios.py' no disponible.")
             
@@ -448,45 +468,48 @@ class SIPADashboard(QWidget):
         if ConfigEditorNode: self.vista_config = ConfigEditorNode()
         else: self.vista_config = QLabel("❌ Error: 'ssipa_config.py' no pudo instanciarse.")
         
+        # Distribución en Stacked (El orden estricto coincide con menu_items)
         self.contenedor_paginas.addWidget(self.vista_dashboard) # 0
         self.contenedor_paginas.addWidget(self.vista_editor)    # 1
         self.contenedor_paginas.addWidget(self.vista_sipacur)   # 2
-        self.contenedor_paginas.addWidget(self.vista_servicios) # 3
-        self.contenedor_paginas.addWidget(self.vista_huella)    # 4 
-        self.contenedor_paginas.addWidget(self.vista_config)    # 5
+        self.contenedor_paginas.addWidget(self.vista_sipaeco)   # 3 (📈 Nueva pestaña)
+        self.contenedor_paginas.addWidget(self.vista_servicios) # 4
+        self.contenedor_paginas.addWidget(self.vista_huella)    # 5 
+        self.contenedor_paginas.addWidget(self.vista_config)    # 6
         
         self.aplicar_control_accesos()
 
     def navegar_a(self, indice):
         self.contenedor_paginas.setCurrentIndex(indice)
         
-        # Mantener sincronizado el estado checked exclusivo de los botones (estilo tabs)
+        # Si entramos a la pestaña de Finanzas, forzamos su sincronización asíncrona
+        if indice == 3 and SIPAecoMainDashboard and hasattr(self.vista_sipaeco, "actualizar_todo"):
+            self.vista_sipaeco.actualizar_todo()
+
         for btn, idx in self.menu_items:
             btn.setChecked(idx == indice)
 
     def ir_a_configuracion_directa(self):
-        if self.user_level >= MATRIZ_PERMISOS[5]:
-            self.navegar_a(5)
+        if self.user_level >= MATRIZ_PERMISOS[6]:
+            self.navegar_a(6)
+
+    def ir_a_finanzas_directa(self):
+        if self.user_level >= MATRIZ_PERMISOS[3]:
+            self.navegar_a(3)
 
     def ejecutar_logout_operador(self):
-            """
-            Rompe el bypass en la base de datos para evitar bucles automáticos 
-            y ordena al mánager regresar a la pasarela de autenticación.
-            """
-            try:
-                from core.persistence import db_engine
-                import json
-                if db_engine and db_engine.is_connected():
-                    # Desactivamos el remember_me para que el Login se muestre limpio
-                    config_str = json.dumps({"remember_me": False})
-                    db_engine._cursor.execute("UPDATE user SET config_seguridad = ? WHERE id = 1", (config_str,))
-                    db_engine._conn.commit()
-            except Exception as e:
-                print(f"⚠️ Alerta en Logout (Persistencia): {e}")
+        try:
+            from core.persistence import db_engine
+            import json
+            if db_engine and db_engine.is_connected():
+                config_str = json.dumps({"remember_me": False})
+                db_engine._cursor.execute("UPDATE user SET config_seguridad = ? WHERE id = 1", (config_str,))
+                db_engine._conn.commit()
+        except Exception as e:
+            print(f"⚠️ Alerta en Logout (Persistencia): {e}")
 
-            # Le decimos a la ventana maestra que destruya el entorno y pinte el login
-            if self.parent_window and hasattr(self.parent_window, "regresar_al_login"):
-                self.parent_window.regresar_al_login()
+        if self.parent_window and hasattr(self.parent_window, "regresar_al_login"):
+            self.parent_window.regresar_al_login()
 
 class SPAWindowsManager(QMainWindow):
     """
@@ -521,26 +544,17 @@ class SPAWindowsManager(QMainWindow):
             self.login_frame.deleteLater()
             self.login_frame = None
             
-        # Desplegar el nuevo panel horizontal pasándole la instancia física de esta ventana (self)
         self.dashboard_core = SIPADashboard(parent_window=self, app_name_md=self.app_name)
         self.spa_layout.addWidget(self.dashboard_core)
         self.setWindowTitle(f"{self.app_name} — Panel Operativo")
 
     def regresar_al_login(self):
-        """
-        Efectúa la desconexión del operador, destruye el panel operativo horizontal 
-        y vuelve a levantar el frame de autenticación asimétrico.
-        """
-        # 1. Si el Dashboard está vivo, lo desmontamos y liberamos memoria
         if hasattr(self, 'dashboard_core') and self.dashboard_core is not None:
             self.spa_layout.removeWidget(self.dashboard_core)
             self.dashboard_core.deleteLater()
             self.dashboard_core = None
             
-        # 2. Restablecemos el título base de la aplicación
         self.setWindowTitle(self.app_name)
-        
-        # 3. Volvemos a invocar la pasarela original
         self.cargar_login_pasarela()
 
 if __name__ == "__main__":

@@ -135,3 +135,42 @@ El Gateway ha tomado el control de los caminos para evitar vectores de ataque *P
                 f.write(informe_md)
         except Exception as e:
             print(f"⚠️ Alerta: No se pudo escribir la mochila de auditoría: {e}")
+
+    # =================================================================
+    # 💉 CONEXIÓN SWITCH EXTERNAL
+    # =================================================================
+
+    @classmethod
+    def _inyectar_rutas_sistema(cls, raiz, logger):
+        """Inyecta los sub-cores en sys.path priorizando el core local activo."""
+        rutas_criticas = [
+            os.path.join(raiz, "external", "SIPAcur", "core", "services"),
+            os.path.join(raiz, "external", "SIPAcur"),
+            os.path.join(raiz, "external", "utils"),
+            raiz
+        ]
+        
+        for r in rutas_criticas:
+            if r not in sys.path:
+                # Si es el core local de servicios de SIPAcur, inyección prioritaria (Posición 0)
+                if "SIPAcur/core/services" in r:
+                    sys.path.insert(0, r)
+                    logger.debug(f"Runtime Path Injection Prioritaria: {r}")
+                else:
+                    sys.path.append(r)
+                    logger.debug(f"Runtime Path Injection Append: {r}")
+
+        # =================================================================
+        # 💉 INCIENSIÓN QUIRÚRGICA: ENLACE AL SWITCH (EN OBRA / TRANSICIÓN)
+        # =================================================================
+        try:
+            ruta_external_dir = os.path.join(raiz, "external")
+            if ruta_external_dir not in sys.path:
+                sys.path.append(ruta_external_dir)
+
+            # Invocamos el switch en caliente sin alterar el flujo previo
+            from sipa_switch import ExternalSwitch
+            ExternalSwitch.conectar_poe()
+            
+        except Exception as e:
+            logger.error(f"🚨 [Fallo de Enlace] No se pudo activar el Switch de External: {e}")

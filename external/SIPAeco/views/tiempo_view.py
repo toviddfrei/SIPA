@@ -3,13 +3,19 @@
 """
 SIPAeco - Módulo de Inyección y Gestión de Impactos de Tiempo (Balas Operativas)
 Ubicación: SIPA/external/SIPAeco/views/tiempo_view.py
-Autor: Daniel Miñana Montero
-Fecha: 2026-05-31
+Autor: Daniel Miñana Montero & Gemini
+Fecha: 2026-06-02
 Descripción: Vista POO que actúa como INPUT dinámico y registro histórico de impactos.
              MEJORA: Selección de tipo de coste (Real vs Default) e imputación financiera.
              AÑADIDO: Infraestructura de adjuntar y crear ficheros vinculados a la FDU.
              INTEGRACIÓN ORÁCULO: Lista dinámica vinculada a sipa_activos.json.
+             🔌 TRUNKING: Alimentación PoE heredada por el Switch de infraestructura.
 """
+
+import os
+import sys
+import subprocess
+from datetime import datetime
 
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
                              QTableWidgetItem, QPushButton, QLabel, QHeaderView, 
@@ -17,9 +23,12 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QGridLayout, QTextEdit, QFileDialog, QListWidget, QMenu)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from datetime import datetime
-import os
-import subprocess
+
+# =====================================================================
+# 🎛️ CONEXIÓN TRONCAL DIRECTA (Conmutada de forma transparente por el Switch)
+# =====================================================================
+# Corrección del enlace físico a la biblioteca central de utilidades
+from external.utils.sipa_utils import sincronizar_contexto_hito_labels
 
 class TiempoTab(QWidget):
     def __init__(self, core, parent_window=None):
@@ -42,12 +51,16 @@ class TiempoTab(QWidget):
         
         # Desplegables y selectores estratégicos
         self.combo_vincular_hito = QComboBox()
-        self.combo_vincular_hito.currentTextChanged.connect(self.on_hito_seleccionado_cambio)
         
         self.lbl_auto_proyecto = QLabel("<b>Proyecto:</b> -")
         self.lbl_auto_proyecto.setStyleSheet("color: #0969da; background: #f0f7ff; padding: 4px; border-radius: 4px;")
         self.lbl_auto_crono = QLabel("<b>Crono Tipo:</b> -")
         self.lbl_auto_crono.setStyleSheet("color: #0969da; background: #f0f7ff; padding: 4px; border-radius: 4px;")
+        
+        # Conexión reactiva utilizando el gestor de la biblioteca compartida utils
+        self.combo_vincular_hito.currentTextChanged.connect(
+            lambda txt: sincronizar_contexto_hito_labels(txt, self.hitos_cache, self.lbl_auto_proyecto, self.lbl_auto_crono)
+        )
         
         self.in_fecha_impacto = QLineEdit()
         self.in_fecha_impacto.setText(datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -58,7 +71,7 @@ class TiempoTab(QWidget):
         self.combo_estado_impacto = QComboBox()
         self.combo_estado_impacto.addItems(["PLANIFICADO", "EN PROCESO", "COMPLETADO", "SUSPENDIDO", "CANCELADO"])
         
-        # --- NUEVO: REFERENCIA DE TARIFA (PRECIO HORA A APLICAR) ---
+        # --- REFERENCIA DE TARIFA (PRECIO HORA A APLICAR) ---
         self.combo_tipo_tarifa = QComboBox()
         self.combo_tipo_tarifa.addItems(["REAL (BANCO)", "DEFAULT (RESPALDO)"])
         self.combo_tipo_tarifa.setToolTip("Elige si este impacto se calcula a precio real de banco o con la tarifa de respaldo.")
@@ -142,7 +155,7 @@ class TiempoTab(QWidget):
         self.table_impactos_tiempo = QTableWidget()
         self.table_impactos_tiempo.setColumnCount(10)
         self.table_impactos_tiempo.setHorizontalHeaderLabels([
-            "ID Bala", "Fecha Impacto", "Hito Vinculado", "Proyecto", 
+            "ID Bala", "Fecha Impacto", "Hito Vinculado", "Proyecto", \
             "Detalle de la Acción Operativa", "Horas", "Tarifa Aplicada", "Coste Imputado", "Estado", "Acciones"
         ])
         
@@ -182,14 +195,6 @@ class TiempoTab(QWidget):
             accion.triggered.connect(lambda checked=False, c=codigo: self.ejecutar_creacion_plantilla(c))
         self.btn_crear_plantilla.setMenu(menu)
 
-    def on_hito_seleccionado_cambio(self, hito_id_texto):
-        if not hito_id_texto: return
-        id_real = hito_id_texto.split(" ")[0]
-        info_hito = self.hitos_cache.get(id_real)
-        if info_hito:
-            self.lbl_auto_proyecto.setText(f"<b>Proyecto:</b> {info_hito.get('id_proyecto', '-')}")
-            self.lbl_auto_crono.setText(f"<b>Crono Tipo:</b> {info_hito.get('id_cronograma_tipo', '-')}")
-
     def on_fila_tabla_seleccionada(self):
         """Detecta qué Bala está seleccionada y vuelca sus archivos en la lista interactiva."""
         items = self.table_impactos_tiempo.selectedItems()
@@ -220,13 +225,18 @@ class TiempoTab(QWidget):
         self.lbl_info_lista.setText("<b>Ficheros Vinculados (Selecciona una fila abajo):</b>")
         
         self.hitos_cache = hitos
+        self.combo_vincular_hito.blockSignals(True)
         self.combo_vincular_hito.clear()
         
         lista_hitos_ordenados = sorted(list(hitos.keys()))
         for h_id in lista_hitos_ordenados:
             nombre_breve = hitos[h_id].get("nombre_accion", "")[:30]
             self.combo_vincular_hito.addItem(f"{h_id} ({nombre_breve}...)", h_id)
+        self.combo_vincular_hito.blockSignals(False)
             
+        # Sincronización inicial tras carga en frío
+        sincronizar_contexto_hito_labels(self.combo_vincular_hito.currentText(), self.hitos_cache, self.lbl_auto_proyecto, self.lbl_auto_crono)
+
         sesiones = self.core.obtener_sesiones()
         proyectos_map = catalogos.get("proyectos", {})
         
@@ -280,7 +290,6 @@ class TiempoTab(QWidget):
             btn_del.setToolTip("Eliminar impacto temporal")
             btn_del.clicked.connect(lambda checked=False, s_id=id_bala: self.ejecutar_baja_impacto(s_id))
             
-            # Si tiene ficheros adjuntos en el array, mostrar un clip indicador
             if sesion.get("ficheros_adjuntos"):
                 lbl_adjunto = QLabel("📎")
                 lbl_adjunto.setToolTip(f"Contiene {len(sesion['ficheros_adjuntos'])} archivo(s). Selecciónala para verlos.")
@@ -354,9 +363,8 @@ class TiempoTab(QWidget):
             if data_logs.get("sesiones"):
                 data_logs["sesiones"][-1]["estado_impacto"] = estado
                 data_logs["sesiones"][-1]["tipo_tarifa_seleccionada"] = tipo_log
-                data_logs["sesiones"][-1]["ficheros_adjuntos"] = [] # Inicializa el array limpio vacio
+                data_logs["sesiones"][-1]["ficheros_adjuntos"] = []
                 
-                # Conservar compatibilidad si el usuario adjuntó algo justo antes de impactar
                 if hasattr(self, 'archivo_temporal_adjunto'):
                     data_logs["sesiones"][-1]["ficheros_adjuntos"].append(self.archivo_temporal_adjunto)
                     delattr(self, 'archivo_temporal_adjunto')
@@ -409,14 +417,11 @@ class TiempoTab(QWidget):
 
     def ejecutar_creacion_plantilla(self, tipo_plantilla):
         """Disparador para generar actas o bitácoras profesionales en inbox."""
-        # Prioridad: Si hay una fila seleccionada en caliente, se asocia directamente a esa Bala
         if self.id_impacto_seleccionado:
             id_impacto = self.id_impacto_seleccionado
-            # Sacamos el título desde la columna 4 de la fila seleccionada
             fila = self.table_impactos_tiempo.currentRow()
             titulo_impacto = self.table_impactos_tiempo.item(fila, 4).text()
         else:
-            # Fallback: Si no hay fila seleccionada, miramos el formulario superior
             hito_texto = self.combo_vincular_hito.currentText()
             if not hito_texto:
                 QMessageBox.warning(self, "Atención", "Selecciona una Bala de la tabla o un Hito del formulario para vincular el documento.")
@@ -426,21 +431,17 @@ class TiempoTab(QWidget):
 
         nombre_archivo = self.core.crear_documento_desde_plantilla(id_impacto, tipo_plantilla, titulo_impacto)
         
-        # Si se asoció a una Bala real existente, simulamos la recarga automática
         if self.id_impacto_seleccionado:
             self.on_fila_tabla_seleccionada()
         else:
-            # Si era del formulario antes de impactar, lo guardamos temporalmente
             self.archivo_temporal_adjunto = nombre_archivo
             self.list_ficheros_fdu.clear()
             self.list_ficheros_fdu.addItem(nombre_archivo)
             
-        # Abrimos el editor de inmediato
         self.abrir_fichero_para_edicion_so(nombre_archivo)
 
     def ejecutar_vinculacion_archivo(self):
         """Abre el explorador nativo forzando el inicio en SIPA/data."""
-        # Calculamos SIPA/data/
         base_sipa = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
         directorio_trabajo = os.path.join(base_sipa, "data")
         
@@ -459,7 +460,6 @@ class TiempoTab(QWidget):
                 else:
                     QMessageBox.critical(self, "Error", nombre_final)
             else:
-                # Si se adjunta desde el formulario superior antes de crear la bala
                 import shutil
                 inbox_dir = os.path.join(directorio_trabajo, "inbox")
                 if not os.path.exists(inbox_dir): os.makedirs(inbox_dir)
@@ -472,48 +472,36 @@ class TiempoTab(QWidget):
                 QMessageBox.information(self, "FDU Vinculada", f"Archivo copiado al inbox listo para impactar: {nombre_final}")
 
     def on_fichero_doble_clic(self, item):
-        """Evento al hacer doble clic en la lista de documentos vinculados."""
         nombre_archivo = item.text()
         self.abrir_fichero_para_edicion_so(nombre_archivo)
 
     def abrir_fichero_para_edicion_so(self, nombre_archivo):
-        """Llama al core para rescatar/limpiar el archivo y lo abre con el software del sistema."""
         ruta_lista, resultado = self.core.preparar_fichero_para_edicion(nombre_archivo)
-        
         if not ruta_lista:
             QMessageBox.critical(self, "Error de Ubicación", resultado)
             return
 
         try:
-            if os.name == 'nt':  # Entorno Windows
-                # os.startfile utiliza la asociación de archivos nativa de Windows
+            if os.name == 'nt':  
                 os.startfile(ruta_lista)
-            else:  # Entorno Linux / Ubuntu
-                # Utiliza xdg-open para llamar al editor predeterminado del sistema de ventanas
+            else:  
                 subprocess.Popen(['xdg-open', ruta_lista])
         except Exception as e:
             QMessageBox.critical(self, "Error OS", f"No se pudo invocar el editor del sistema: {e}")
     
     def mostrar_menu_contextual_ficheros(self, posicion):
-        """Despliega un menú al hacer clic derecho sobre un archivo de la lista."""
         item = self.list_ficheros_fdu.itemAt(posicion)
-        if not item:
-            return # Clic derecho en una zona vacía de la lista
+        if not item: return
 
         nombre_archivo = item.text()
         menu = QMenu(self)
-        
         accion_desvincular = menu.addAction("❌ Desvincular de la Bala")
-        
-        # Ejecutar el menú en la posición del cursor
         accion_seleccionada = menu.exec(self.list_ficheros_fdu.mapToGlobal(posicion))
         
         if accion_seleccionada == accion_desvincular:
             self.ejecutar_desvinculacion_fichero(nombre_archivo)
 
     def ejecutar_desvinculacion_fichero(self, nombre_archivo):
-        """Gestiona la baja del archivo dependiendo de si la bala es real o temporal."""
-        # 1. Caso: El archivo está en el búfer temporal (formulario superior, antes de impactar)
         if not self.id_impacto_seleccionado:
             if hasattr(self, 'archivo_temporal_adjunto') and self.archivo_temporal_adjunto == nombre_archivo:
                 delattr(self, 'archivo_temporal_adjunto')
@@ -521,7 +509,6 @@ class TiempoTab(QWidget):
                 QMessageBox.information(self, "FDU Saneada", "Archivo temporal removido del formulario.")
             return
 
-        # 2. Caso: Es una Bala real de la tabla
         res = QMessageBox.question(
             self, 
             "Desvincular Archivo", 
@@ -532,9 +519,7 @@ class TiempoTab(QWidget):
         if res == QMessageBox.StandardButton.Yes:
             exito, msg = self.core.desvincular_archivo_de_impacto(self.id_impacto_seleccionado, nombre_archivo)
             if exito:
-                # Refrescamos la lista de la fila actual para que desaparezca visualmente
                 self.on_fila_tabla_seleccionada()
-                # Opcional: Refrescamos la tabla completa por si cambia el icono del clip 📎
                 if self.parent_window:
                     self.parent_window.actualizar_todo()
             else:

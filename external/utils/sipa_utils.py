@@ -40,7 +40,6 @@ def blindar_formatos_fecha(datos_mapa):
                     
     return datos_mapa
 
-
 def obtener_peso_digital_mb(ruta):
     """Calcula el tamaño en Megabytes de un archivo o directorio de forma segura."""
     total = 0
@@ -55,7 +54,6 @@ def obtener_peso_digital_mb(ruta):
             total = os.path.getsize(ruta)
     return total / (1024 * 1024)
 
-
 def calcular_gasto_estructural(base_dir):
     """Calcula el porcentaje de peso consumido puramente por el software vs datos."""
     peso_sipa_total = obtener_peso_digital_mb(base_dir)
@@ -66,9 +64,32 @@ def calcular_gasto_estructural(base_dir):
     
     return porcentaje_gasto
 
-
 def normalizar_cadena_insensible(txt):
     """Elimina acentos, diéresis y fuerza minúsculas para comparaciones e índices."""
     if not txt:
         return ""
     return "".join(c for c in unicodedata.normalize('NFD', txt.lower()) if unicodedata.category(c) != 'Mn')
+
+def sincronizar_contexto_hito_labels(hito_id_texto, hitos_cache, lbl_proyecto, lbl_crono):
+    """
+    Sincroniza reactivamente las etiquetas de interfaz (Proyecto y Cronograma) 
+    al cambiar la selección de un hito en un combo box.
+    Aplica el patrón de extracción e indexación robusta compartida por Tiempo y Finanzas.
+    """
+    if not hito_id_texto or "SIN ASIGNAR" in hito_id_texto:
+        lbl_proyecto.setText("<b>Proyecto:</b> -")
+        lbl_crono.setText("<b>Crono Tipo:</b> -")
+        return None
+
+    # Extracción homogénea mediante troceo por primer espacio
+    id_real = hito_id_texto.split(" ")[0].strip()
+    info_hito = hitos_cache.get(id_real)
+    
+    if info_hito:
+        lbl_proyecto.setText(f"<b>Proyecto:</b> {info_hito.get('id_proyecto', '-')}")
+        lbl_crono.setText(f"<b>Crono Tipo:</b> {info_hito.get('id_cronograma_tipo', '-')}")
+        return id_real
+    else:
+        lbl_proyecto.setText("<b>Proyecto:</b> -")
+        lbl_crono.setText("<b>Crono Tipo:</b> -")
+        return None

@@ -42,7 +42,8 @@ class CalendarioSemanaTab(QWidget):
         # (Asume que está registrado en el core, si no, se puede instanciar directamente)
         self.cal_service = getattr(self.core, "calendar_service", None)
         if not self.cal_service:
-            from core.services.sesipaeco_calendar import SESIPAecoCalendarService
+            # Corrección del enlace físico al servicio de calendario local de la extensión
+            from external.SIPAeco.core.services.sesipaeco_calendar import SESIPAecoCalendarService
             self.cal_service = SESIPAecoCalendarService(self.core)
         
         # Fecha de pivote operativa local

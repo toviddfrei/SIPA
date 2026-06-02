@@ -13,8 +13,8 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QGroupBox, QLineEdit, QTextEdit, QGridLayout)
 from PySide6.QtCore import Qt
 
-from core.services.sesipaeco_report import SESIPAecoReportService
-
+# Corrección del enlace físico al servicio de reportes local de la extensión
+from external.SIPAeco.core.services.sesipaeco_report import SESIPAecoReportService
 
 class ClickableFrame(QFrame):
     """Contenedor genérico que emite una señal simulada al hacer clic."""

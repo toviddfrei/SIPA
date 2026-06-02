@@ -3,9 +3,10 @@
 """
 SIPAeco GUI - Gestión de Caja, Pasarela Bancaria y Previsiones Elásticas
 Ubicación: SIPA/external/SIPAeco/views/finanzas_view.py
-Autor: Daniel Miñana Montero
+Autor: Daniel Miñana Montero & Gemini
 Descripción: Módulo de interfaz para finanzas con entrada de datos blindada,
              replicando exactamente el motor de lectura y eventos de tiempo_view.py.
+             🔌 TRUNKING: Alimentación PoE heredada por el Switch de infraestructura.
 """
 
 import os
@@ -18,8 +19,14 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont
 
-# Servicio especializado
-from core.services.sesipaeco_caja import SESIPAecoCajaService
+# Corrección de la pasarela física al servicio de caja local de la extensión
+from external.SIPAeco.core.services.sesipaeco_caja import SESIPAecoCajaService
+
+# =====================================================================
+# 🎛️ CONEXIÓN TRONCAL DIRECTA (Conmutada de forma transparente por el Switch)
+# =====================================================================
+# Corrección definitiva del enlace a la biblioteca central de utilidades
+from external.utils.sipa_utils import sincronizar_contexto_hito_labels
 
 class FinanzasTab(QWidget):
     def __init__(self, core, parent_window=None):
@@ -50,9 +57,19 @@ class FinanzasTab(QWidget):
         form_layout.setContentsMargins(10, 10, 10, 10)
         form_layout.setSpacing(8)
         
-        # Combo de Hitos: Usa la misma estrategia de texto que tiempo_view.py
+        # Combo de Hitos: Configuración reactiva delegada a sipa_utils
         self.combo_vincular_hito = QComboBox()
         self.combo_vincular_hito.setFixedWidth(280)
+        
+        # Etiquetas informativas dinámicas integradas en la cabecera
+        self.lbl_auto_proyecto = QLabel("<b>Proyecto:</b> -")
+        self.lbl_auto_proyecto.setStyleSheet("color: #0969da; background: #f0f7ff; padding: 4px; border-radius: 4px;")
+        self.lbl_auto_crono = QLabel("<b>Crono Tipo:</b> -")
+        self.lbl_auto_crono.setStyleSheet("color: #0969da; background: #f0f7ff; padding: 4px; border-radius: 4px;")
+        
+        self.combo_vincular_hito.currentTextChanged.connect(
+            lambda txt: sincronizar_contexto_hito_labels(txt, self.hitos_cache, self.lbl_auto_proyecto, self.lbl_auto_crono)
+        )
         
         self.combo_f_naturaleza = QComboBox()
         self.combo_f_naturaleza.addItems(["GASTO 🔽", "INGRESO 🔼"])
@@ -79,6 +96,8 @@ class FinanzasTab(QWidget):
         # Ensamblado lineal idéntico en cabecera superior
         form_layout.addWidget(QLabel("<b>Hito Núcleo Vinculante:</b>"))
         form_layout.addWidget(self.combo_vincular_hito)
+        form_layout.addWidget(self.lbl_auto_proyecto)
+        form_layout.addWidget(self.lbl_auto_crono)
         form_layout.addWidget(self.combo_f_naturaleza)
         form_layout.addWidget(self.combo_f_estado)
         form_layout.addWidget(self.in_f_concepto)
@@ -188,7 +207,7 @@ class FinanzasTab(QWidget):
         """Llamado por el Core. Inyecta datos en frío de manera idéntica a tiempo_view.py"""
         self.hitos_cache = hitos_dict
         
-        # Replicamos el llenado exacto por fuerza bruta sin eventos cruzados
+        # Sincronización limpia del combo sin disparos en bucle
         self.combo_vincular_hito.blockSignals(True)
         self.combo_vincular_hito.clear()
         
@@ -198,6 +217,9 @@ class FinanzasTab(QWidget):
             self.combo_vincular_hito.addItem(f"{h_id} ({nombre_breve}...)", h_id)
         self.combo_vincular_hito.blockSignals(False)
             
+        # Forzar el refresco inicial reactivo en la carga del panel de control financiero
+        sincronizar_contexto_hito_labels(self.combo_vincular_hito.currentText(), self.hitos_cache, self.lbl_auto_proyecto, self.lbl_auto_crono)
+
         # Carga del repositorio maestro JSON de Finanzas
         master_data = self.core._load_json(self.core.cronogramas_path)
         fin_globales = master_data.get("finanzas_globales", {})
@@ -564,6 +586,9 @@ class FinanzasTab(QWidget):
         self.core._save_json(self.core.cronogramas_path, master_data)
         if self.parent_window: self.parent_window.actualizar_todo()
 
+    # =====================================================================
+    # 🔍 CONSOLA DE AUDITORÍA HISTÓRICA FRÍA CON BUSCADOR OPTIMIZADO
+    # =====================================================================
     def abrir_ventana_auditoria(self):
         """Consola de asignación con buscador optimizado."""
         dialogo = QDialog(self)

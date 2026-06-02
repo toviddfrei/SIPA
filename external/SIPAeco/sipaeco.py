@@ -1,37 +1,54 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-SIPAeco GUI - Sistema de Control Operativo y Cronogramas Existenciales
-Ubicación: SIPA/external/SIPAeco/sipaeco.py
-Autor: Daniel Miñana Montero
-Fecha: 2026-05-30
-Versión: 2.6.0
-Descripción: Culminación de la refactorización POO del ecosistema.
-             Orquestación unificada de vistas modulares y preservación absoluta de
-             lógicas de búsqueda en tiempo real, migración nuclear y pizarras de control.
-             CORRECCIÓN: Reordenación de pestañas según el flujo lógico existencial.
-             MEJORA: Pestaña de configuración robustecida con inyección de catálogos 
-                     maestros y control de costes elásticos (Precio Real vs Default).
-"""
+# ==========================================================================
+# PROYECTO SIPA - Extensión Económica
+# Archivo: sipaeco.py
+# Módulo: SIPAecoMainDashboard (Integrado en Core SPA)
+# Versión: 2.6.2.2-PoE | Fecha: 2026-06-02
+# Autor: Daniel Miñana Montero & Gemini
+# Descripción: Culminación de la refactorización POO del ecosistema económico.
+#              Orquestación unificada de vistas modulares mediante el acoplamiento
+#              del Switch de infraestructura centralizado en external/.
+# ==========================================================================
 
+import os
 import sys
 from datetime import datetime
+
+# =====================================================================
+# 🔌 ENERGIZACIÓN CENTRALIZADA (Switch de Capa 3 - PoE Link)
+# =====================================================================
+try:
+    # Localizamos dinámicamente el directorio padre /external desde donde cuelga el switch
+    ruta_external = os.path.abspath(os.path.join(os.path.dirname(__abspath__ if '__abspath__' in locals() else __file__), ".."))
+    if ruta_external not in sys.path:
+        sys.path.insert(0, ruta_external)
+        
+    # Conectamos al Switch de infraestructura para levantar los trunks
+    from sipa_switch import ExternalSwitch
+    ExternalSwitch.conectar_poe()
+except Exception as e:
+    print(f"🚨 [Fallo de Hardware] No se pudo conmutar el Switch Central en sipaeco.py: {e}")
+
+# =====================================================================
+# 🎛️ IMPORTS NATIVOS Y CONMUTADOS (Señal limpia a todo el ecosistema)
+# =====================================================================
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, 
                              QTableWidget, QTableWidgetItem, QPushButton, 
-                             QLabel, QHeaderView, QApplication, QLineEdit, 
-                             QFrame, QMessageBox, QComboBox, QGroupBox, QLayout,
-                             QFormLayout)
+                             QLabel, QHeaderView, QLineEdit, QFrame, 
+                             QMessageBox, QComboBox, QGroupBox, QLayout)
 from PySide6.QtCore import Qt, QPoint
 
-# Servicio unificado core de SIPA
-from core.services.sesipaeco_core import SESIPAecoCore
+# Corrección del enlace físico al servicio core local de la extensión
+from external.SIPAeco.core.services.sesipaeco_core import SESIPAecoCore
 
-# Importación de la suite completa de submódulos refactorizados a POO
-from views.calendar_view import CalendarioSemanaTab
-from views.report_view import InformesDocsTab
-from views.hitos_view import HitosTab
-from views.tiempo_view import TiempoTab
-from views.finanzas_view import FinanzasTab
+# Vistas locales mapeadas de forma absoluta a su paquete conmutado por el Switch
+from external.SIPAeco.views.calendar_view import CalendarioSemanaTab
+from external.SIPAeco.views.report_view import InformesDocsTab
+from external.SIPAeco.views.hitos_view import HitosTab
+from external.SIPAeco.views.tiempo_view import TiempoTab
+from external.SIPAeco.views.finanzas_view import FinanzasTab
+
 
 class ClickableFrame(QFrame):
     """Contenedor genérico que emite una señal simulada al hacer clic."""
@@ -95,18 +112,14 @@ class DraggableHitoBlock(QFrame):
         super().mouseReleaseEvent(event)
 
 
-class SIPAecoWindow(QWidget):
+class SIPAecoMainDashboard(QWidget):
+    """
+    Componente Central Unificado de SIPAeco.
+    Se inyecta de forma limpia en el QStackedWidget de sipa.py compartiendo el Core Loop.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("SIPAeco — Consola de Control de Hitos e Impactos")
-        self.setMinimumSize(1024, 720) 
-        self.resize(1280, 800)
-
         self.core = SESIPAecoCore()
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(10, 10, 10, 10)
-
-        self.layout().setSizeConstraint(QLayout.SizeConstraint.SetMinAndMaxSize)
         
         self.fecha_pivote = datetime.now()
         self.dias_map_es = {
@@ -115,27 +128,143 @@ class SIPAecoWindow(QWidget):
         }
         
         self.asegurar_y_migrar_estructura_nuclear()
-        self.init_header()
+        self.init_ui()
         
-        # Contenedor de Pestañas Principal
-        self.tabs = QTabWidget()
-        self.tabs.setTabsClosable(False)
-        self.tabs.setMovable(False)
-        self.tabs.currentChanged.connect(self.ejecutar_filtrado_global)
-        self.main_layout.addWidget(self.tabs)
-        
-        # Inicialización y Adición en el ORDEN LÓGICO EXISTENCIAL
-        self.init_tab_calendario_poo()      # Pestaña 1 (Index 0)
-        self.init_tab_planificacion_poo()   # Pestaña 2 (Index 1)
-        self.init_tab_tiempo_poo()          # Pestaña 3 (Index 2)
-        self.init_tab_finanzas_poo()        # Pestaña 4 (Index 3)
-        self.init_tab_informes_docs()       # Pestaña 5 (Index 4)
-        self.init_tab_config_catalogos()    # Pestaña 6 (Index 5)
-        
-        self.tabs.setCurrentIndex(0)
-        
+        # Carga inicial estricta de catálogos y renders reactivos
         self.actualizar_todo()
         self.cargar_datos_catalogos()
+
+    def init_ui(self):
+        self.layout_principal = QVBoxLayout(self)
+        self.layout_principal.setContentsMargins(0, 0, 0, 0)
+        self.layout_principal.setSpacing(15)
+
+        # 1. Sub-Navbar Interno Modular Informativo
+        self.cabecera_eco = QHBoxLayout()
+        self.lbl_titulo_modulo = QLabel("🧾 SUITE DE GESTIÓN ECONÓMICA Y CRONOGRAMAS EXISTENCIALES")
+        self.lbl_titulo_modulo.setStyleSheet("""
+            font-family: 'Consolas'; font-size: 13px; font-weight: bold; color: #00FF95;
+        """)
+        self.cabecera_eco.addWidget(self.lbl_titulo_modulo)
+        self.cabecera_eco.addStretch()
+        self.layout_principal.addLayout(self.cabecera_eco)
+
+        # 2. Contenedor de Pestañas con el Orden Lógico Existencial Completo
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane { border: 1px solid #2D2D2D; background-color: #121212; }
+            QTabBar::tab {
+                background-color: #1A1A1A; color: #888888; border: 1px solid #2D2D2D;
+                padding: 8px 16px; border-top-left-radius: 4px; border-top-right-radius: 4px;
+                font-family: 'Consolas'; font-size: 11px;
+            }
+            QTabBar::tab:hover { background-color: #242424; color: #FFFFFF; }
+            QTabBar::tab:selected { background-color: #121212; color: #00FF95; border-bottom-color: #121212; }
+        """)
+        
+        # Inicialización de submódulos pasando las referencias cruzadas del Core
+        self.tab_calendario = CalendarioSemanaTab(self.core, self)
+        self.tab_planificacion = HitosTab(self.core, self)
+        self.tab_tiempo = TiempoTab(self.core, self)
+        self.tab_finanzas = FinanzasTab(self.core, self)
+        self.tab_informes = InformesDocsTab(self.core, self)
+        self.init_tab_config_catalogos() # Construcción modular de la pestaña de catálogos
+
+        # Inyección ordenada en la interfaz elástica
+        self.tabs.addTab(self.tab_calendario, "📅 CALENDARIO Y DISPONIBILIDAD")
+        self.tabs.addTab(self.tab_planificacion, "⚡ MATRIZ DE HITOS")
+        self.tabs.addTab(self.tab_tiempo, "⏱️ IMPACTOS DE TIEMPO")
+        self.tabs.addTab(self.tab_finanzas, "💰 FLUJO DE CAJA")
+        self.tabs.addTab(self.tab_informes, "📋 INFORMES Y DOCUMENTACIÓN")
+        self.tabs.addTab(self.tab_catalogos, "⚙️ CATÁLOGOS Y CONFIGURACIÓN")
+
+        self.layout_principal.addWidget(self.tabs)
+
+    def init_tab_config_catalogos(self):
+        self.tab_catalogos = QWidget()
+        main_ly = QVBoxLayout(self.tab_catalogos)
+        main_ly.setContentsMargins(10, 10, 10, 10)
+        
+        # --- UMBRALES DE SEGURIDAD OPERATIVA Y COSTE ELÁSTICO ---
+        box_tasas = QGroupBox("🛡️ Umbrales de Seguridad Operativa y Coste Elástico")
+        box_tasas.setStyleSheet("QGroupBox { font-family: 'Consolas'; color: #E0E0E0; font-weight: bold; }")
+        ly_tasas = QHBoxLayout(box_tasas)
+        
+        self.lbl_precio_hora_real = QLabel("<b>Precio Hora Real (Banco):</b> Calculando...")
+        self.lbl_precio_hora_real.setStyleSheet("color: #00FF95; font-size: 11px; background: #1A1A1A; padding: 6px; border-radius: 4px; border: 1px solid #2D2D2D;")
+        
+        self.in_precio_hora_default = QLineEdit()
+        self.in_precio_hora_default.setPlaceholderText("Ej. 25.00")
+        self.in_precio_hora_default.setFixedWidth(100)
+        self.in_precio_hora_default.setStyleSheet("background-color: #1A1A1A; color: #FFF; border: 1px solid #333;")
+        
+        btn_guardar_tasa = QPushButton("💾 Fijar Default")
+        btn_guardar_tasa.setCursor(Qt.PointingHandCursor)
+        btn_guardar_tasa.clicked.connect(self.guardar_precio_hora_default)
+        
+        ly_tasas.addWidget(self.lbl_precio_hora_real)
+        ly_tasas.addStretch()
+        ly_tasas.addWidget(QLabel("Precio Hora de Respaldo (Default):"))
+        ly_tasas.addWidget(self.in_precio_hora_default)
+        ly_tasas.addWidget(btn_guardar_tasa)
+        main_ly.addWidget(box_tasas)
+        
+        # --- TABLAS DE CATÁLOGOS Y FORMULARIOS DE ALTA ---
+        tables_layout = QHBoxLayout()
+        
+        # Columna Izquierda: Proyectos activos
+        box_pry = QGroupBox("📁 Catálogo Maestro de Proyectos Activos")
+        box_pry.setStyleSheet("QGroupBox { font-family: 'Consolas'; color: #AAA; }")
+        ly_pry = QVBoxLayout(box_pry)
+        
+        form_pry = QHBoxLayout()
+        self.in_new_pry_id = QLineEdit()
+        self.in_new_pry_id.setPlaceholderText("ID (PRY-00X)")
+        self.in_new_pry_id.setFixedWidth(90)
+        self.in_new_pry_nombre = QLineEdit()
+        self.in_new_pry_nombre.setPlaceholderText("Nombre del Proyecto")
+        btn_add_pry = QPushButton("➕ Añadir")
+        btn_add_pry.clicked.connect(self.ejecutar_alta_catalogo_proyecto)
+        form_pry.addWidget(self.in_new_pry_id)
+        form_pry.addWidget(self.in_new_pry_nombre)
+        form_pry.addWidget(btn_add_pry)
+        ly_pry.addLayout(form_pry)
+        
+        self.table_cat_proyectos = QTableWidget()
+        self.table_cat_proyectos.setColumnCount(2)
+        self.table_cat_proyectos.setHorizontalHeaderLabels(["ID Proyecto", "Nombre de Proyecto"])
+        self.configurar_propiedades_tabla(self.table_cat_proyectos)
+        self.table_cat_proyectos.cellChanged.connect(self.on_celda_catalogo_proyecto_cambiada)
+        ly_pry.addWidget(self.table_cat_proyectos)
+        tables_layout.addWidget(box_pry, stretch=1)
+        
+        # Columna Derecha: Cronogramas Tipos
+        box_crn = QGroupBox("⚙️ Clasificación de Cronogramas Tipos")
+        box_crn.setStyleSheet("QGroupBox { font-family: 'Consolas'; color: #AAA; }")
+        ly_crn = QVBoxLayout(box_crn)
+        
+        form_crn = QHBoxLayout()
+        self.in_new_crn_id = QLineEdit()
+        self.in_new_crn_id.setPlaceholderText("ID (CRN-00X)")
+        self.in_new_crn_id.setFixedWidth(90)
+        self.in_new_crn_codigo = QLineEdit()
+        self.in_new_crn_codigo.setPlaceholderText("Código Clasificador")
+        btn_add_crn = QPushButton("➕ Añadir")
+        btn_add_crn.clicked.connect(self.ejecutar_alta_catalogo_crono)
+        form_crn.addWidget(self.in_new_crn_id)
+        form_crn.addWidget(self.in_new_crn_codigo)
+        form_crn.addWidget(btn_add_crn)
+        ly_crn.addLayout(form_crn)
+        
+        self.table_cat_cronos = QTableWidget()
+        self.table_cat_cronos.setColumnCount(2)
+        self.table_cat_cronos.setHorizontalHeaderLabels(["ID Crono Tipo", "Código Clasificador"])
+        self.configurar_propiedades_tabla(self.table_cat_cronos)
+        self.table_cat_cronos.cellChanged.connect(self.on_celda_catalogo_crono_cambiada)
+        ly_crn.addWidget(self.table_cat_cronos)
+        tables_layout.addWidget(box_crn, stretch=1)
+        
+        main_ly.addLayout(tables_layout)
 
     def asegurar_y_migrar_estructura_nuclear(self):
         master_data = self.core._load_json(self.core.cronogramas_path)
@@ -144,10 +273,7 @@ class SIPAecoWindow(QWidget):
 
         print("⚠️ Detectado formato antiguo. Iniciando migración nuclear segura de registros...")
         nuevo_json = {
-            "configuracion": {
-                "precio_hora_default": 25.0,
-                "minutos_diarios_totales": 1440
-            },
+            "configuracion": {"precio_hora_default": 25.0, "minutos_diarios_totales": 1440},
             "catalogos": {"proyectos": {}, "cronogramas_tipos": {}, "hitos_reutilizables": {}},
             "hitos_instanciados": {}
         }
@@ -174,8 +300,7 @@ class SIPAecoWindow(QWidget):
                 if proyecto_nombre not in mapa_proyectos:
                     id_pry = f"PRY-{contador_proy:03d}"
                     nuevo_json["catalogos"]["proyectos"][id_pry] = {
-                        "nombre": proyecto_nombre,
-                        "descripcion": f"Proyecto {proyecto_nombre}"
+                        "nombre": proyecto_nombre, "descripcion": f"Proyecto {proyecto_nombre}"
                     }
                     mapa_proyectos[proyecto_nombre] = id_pry
                     contador_proy += 1
@@ -212,162 +337,24 @@ class SIPAecoWindow(QWidget):
         self.core._save_json(self.core.cronogramas_path, nuevo_json)
         print(f"✅ Migración estructural completada con éxito. {contador_nuclear - 1} registros blindados.")
 
-    def init_header(self):
-        header = QHBoxLayout()
-        title_label = QLabel(f"<b>SIPAeco v2.6.0</b> | Terminal de Gestión de <b>{self.core.propietario}</b>")
-        title_label.setStyleSheet("font-size: 14px;")
-        
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Buscar texto en tabla activa...")
-        self.search_input.setFixedWidth(320)
-        self.search_input.setStyleSheet("""
-            QLineEdit { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background-color: #ffffff; }
-            QLineEdit:focus { border: 1px solid #0969da; }
-        """)
-        self.search_input.textChanged.connect(self.ejecutar_filtrado_global)
-        
-        self.btn_refresh = QPushButton("🔄 Sincronizar Datos General")
-        self.btn_refresh.clicked.connect(self.actualizar_todo)
-        
-        header.addWidget(title_label)
-        header.addStretch()
-        header.addWidget(self.search_input)
-        header.addWidget(self.btn_refresh)
-        self.main_layout.addLayout(header)
-
-    def init_tab_calendario_poo(self):
-        self.tab_calendario = CalendarioSemanaTab(self.core, self)
-        self.tabs.addTab(self.tab_calendario, "📅 Calendario y Disponibilidad")
-
-    def init_tab_planificacion_poo(self):
-        self.tab_planificacion = HitosTab(self.core, self)
-        self.tabs.addTab(self.tab_planificacion, "⚡ Matriz de Hitos")
-
-    def init_tab_tiempo_poo(self):
-        self.tab_tiempo = TiempoTab(self.core, self)
-        self.tabs.addTab(self.tab_tiempo, "⏱️ Impactos de Tiempo")
-
-    def init_tab_finanzas_poo(self):
-        self.tab_finanzas = FinanzasTab(self.core, self)
-        self.tabs.addTab(self.tab_finanzas, "💰 Flujo de Caja")
-
-    def init_tab_informes_docs(self):
-        self.tab_informes = InformesDocsTab(self.core, self)
-        self.tabs.addTab(self.tab_informes, "📋 Informes y Documentación")
-
-    def init_tab_config_catalogos(self):
-        self.tab_catalogos = QWidget()
-        main_ly = QVBoxLayout(self.tab_catalogos)
-        main_ly.setContentsMargins(10, 10, 10, 10)
-        
-        # --- BLOQUE NUEVO: CONFIGURACIÓN ECONÓMICA DE SEGURIDAD (TARIFA HORA) ---
-        box_tasas = QGroupBox("🛡️ Umbrales de Seguridad Operativa y Coste Elástico")
-        ly_tasas = QHBoxLayout(box_tasas)
-        
-        self.lbl_precio_hora_real = QLabel("<b>Precio Hora Real (Banco):</b> Calculando...")
-        self.lbl_precio_hora_real.setStyleSheet("color: #0969da; font-size: 11px; background: #f0f7ff; padding: 6px; border-radius: 4px; border: 1px solid #dd3eff;")
-        
-        self.in_precio_hora_default = QLineEdit()
-        self.in_precio_hora_default.setPlaceholderText("Ej. 25.00")
-        self.in_precio_hora_default.setFixedWidth(100)
-        
-        btn_guardar_tasa = QPushButton("💾 Fijar Default")
-        btn_guardar_tasa.clicked.connect(self.guardar_precio_hora_default)
-        
-        ly_tasas.addWidget(self.lbl_precio_hora_real)
-        ly_tasas.addStretch()
-        ly_tasas.addWidget(QLabel("Precio Hora de Respaldo (Default):"))
-        ly_tasas.addWidget(self.in_precio_hora_default)
-        ly_tasas.addWidget(btn_guardar_tasa)
-        main_ly.addWidget(box_tasas)
-        
-        # --- BLOQUE INFERIOR: CATÁLOGOS EXISTENTES Y FORMULARIOS DE ALTA ---
-        tables_layout = QHBoxLayout()
-        
-        # Columna Izquierda: Proyectos
-        box_pry = QGroupBox("📁 Catálogo Maestro de Proyectos Activos")
-        ly_pry = QVBoxLayout(box_pry)
-        
-        # Formulario de Alta Proyecto
-        form_pry = QHBoxLayout()
-        self.in_new_pry_id = QLineEdit()
-        self.in_new_pry_id.setPlaceholderText("ID (PRY-00X)")
-        self.in_new_pry_id.setFixedWidth(90)
-        self.in_new_pry_nombre = QLineEdit()
-        self.in_new_pry_nombre.setPlaceholderText("Nombre del Proyecto")
-        btn_add_pry = QPushButton("➕ Añadir")
-        btn_add_pry.clicked.connect(self.ejecutar_alta_catalogo_proyecto)
-        form_pry.addWidget(self.in_new_pry_id)
-        form_pry.addWidget(self.in_new_pry_nombre)
-        form_pry.addWidget(btn_add_pry)
-        ly_pry.addLayout(form_pry)
-        
-        self.table_cat_proyectos = QTableWidget()
-        self.table_cat_proyectos.setColumnCount(2)
-        self.table_cat_proyectos.setHorizontalHeaderLabels(["ID Proyecto", "Nombre de Proyecto"])
-        self.configurar_propiedades_tabla(self.table_cat_proyectos)
-        self.table_cat_proyectos.cellChanged.connect(self.on_celda_catalogo_proyecto_cambiada)
-        ly_pry.addWidget(self.table_cat_proyectos)
-        tables_layout.addWidget(box_pry, stretch=1)
-        
-        # Columna Derecha: Cronogramas Tipos
-        box_crn = QGroupBox("⚙️ Clasificación de Cronogramas Tipos")
-        ly_crn = QVBoxLayout(box_crn)
-        
-        # Formulario de Alta Cronograma Tipo
-        form_crn = QHBoxLayout()
-        self.in_new_crn_id = QLineEdit()
-        self.in_new_crn_id.setPlaceholderText("ID (CRN-00X)")
-        self.in_new_crn_id.setFixedWidth(90)
-        self.in_new_crn_codigo = QLineEdit()
-        self.in_new_crn_codigo.setPlaceholderText("Código Clasificador")
-        btn_add_crn = QPushButton("➕ Añadir")
-        btn_add_crn.clicked.connect(self.ejecutar_alta_catalogo_crono)
-        form_crn.addWidget(self.in_new_crn_id)
-        form_crn.addWidget(self.in_new_crn_codigo)
-        form_crn.addWidget(btn_add_crn)
-        ly_crn.addLayout(form_crn)
-        
-        self.table_cat_cronos = QTableWidget()
-        self.table_cat_cronos.setColumnCount(2)
-        self.table_cat_cronos.setHorizontalHeaderLabels(["ID Crono Tipo", "Código Clasificador"])
-        self.configurar_propiedades_tabla(self.table_cat_cronos)
-        self.table_cat_cronos.cellChanged.connect(self.on_celda_catalogo_crono_cambiada)
-        ly_crn.addWidget(self.table_cat_cronos)
-        tables_layout.addWidget(box_crn, stretch=1)
-        
-        main_ly.addLayout(tables_layout)
-        self.tabs.addTab(self.tab_catalogos, "⚙️ Catálogos y Configuración")
-
-    def combo_filter_proyecto_text(self):
-        if hasattr(self, 'combo_filtro_proyecto'):
-            return self.combo_filtro_proyecto.currentText()
-        return "TODOS"
-
     def cargar_datos_catalogos(self):
         master_data = self.core._load_json(self.core.cronogramas_path)
         catalogos = master_data.get("catalogos", {})
         config = master_data.get("configuracion", {})
         
-        # Cargar precio hora default en el campo de texto
         self.in_precio_hora_default.setText(str(config.get("precio_hora_default", 25.0)))
-        
-        # Calcular tasa elástica en caliente (Integración segura)
         tasa_real = self.calcular_tasa_real_banco_provisional(master_data)
         self.lbl_precio_hora_real.setText(f"<b>Precio Hora Real (Banco Últimos 30 días):</b> {tasa_real:.2f} €/h")
         
         self.renderizar_catalogos_maestros(catalogos)
 
     def calcular_tasa_real_banco_provisional(self, master_data):
-        """Calcula el coste elástico basado en el extracto bancario real. 
-           Si falla o no hay datos, devuelve 0.0 para activar la degradación de seguridad."""
         try:
             movimientos = self.core._load_json(self.core.cash_log_path).get("transacciones", [])
-            # Sumatorio de ingresos reales
             ingresos_totales = sum(float(m.get("cantidad", 0)) for m in movimientos if m.get("tipo") == "INGRESO")
             if ingresos_totales <= 0:
-                return 0.0 # Activará la degradación al default de seguridad
-            return ingresos_totales / 160.0 # Dividido entre las horas operativas configuradas
+                return 0.0
+            return ingresos_totales / 160.0
         except Exception:
             return 0.0
 
@@ -393,8 +380,7 @@ class SIPAecoWindow(QWidget):
             return
             
         master_data = self.core._load_json(self.core.cronogramas_path)
-        catalogos = master_data.setdefault("catalogos", {})
-        proyectos = catalogos.setdefault("proyectos", {})
+        proyectos = master_data.setdefault("catalogos", {}).setdefault("proyectos", {})
         
         if id_pry in proyectos:
             QMessageBox.warning(self, "Error", f"El ID de proyecto '{id_pry}' ya existe.")
@@ -416,8 +402,8 @@ class SIPAecoWindow(QWidget):
             return
             
         master_data = self.core._load_json(self.core.cronogramas_path)
-        catalogos = master_data.setdefault("catalogos", {})
-        cronos = catalogos.setdefault("cronogramas_tipos", {})
+        # CORREGIDO: "cronogramas_tipos" en vez de "cronograms_tipos"
+        cronos = master_data.setdefault("catalogos", {}).setdefault("cronogramas_tipos", {})
         
         if id_crn in cronos:
             QMessageBox.warning(self, "Error", f"El ID de cronograma tipo '{id_crn}' ya existe.")
@@ -474,50 +460,44 @@ class SIPAecoWindow(QWidget):
         self.actualizar_todo()
 
     def actualizar_todo(self):
-        """Sincroniza y fuerza la renderización reactiva de todas las interfaces."""
+        """Punto de entrada unificado invocado por sipa.py para renders elásticos."""
         master_data = self.core._load_json(self.core.cronogramas_path)
         hitos = master_data.get("hitos_instanciados", {})
         catalogos = master_data.get("catalogos", {})
-        config = master_data.get("configuracion", {})
 
-        # Sincronizar tasas elásticas en la cabecera del panel de control
         tasa_real = self.calcular_tasa_real_banco_provisional(master_data)
         if hasattr(self, 'lbl_precio_hora_real'):
             self.lbl_precio_hora_real.setText(f"<b>Precio Hora Real (Banco Últimos 30 días):</b> {tasa_real:.2f} €/h")
 
-        # Sincronizar matriz de hitos externalizada
-        if hasattr(self, 'tab_planificacion') and hasattr(self.tab_planificacion, 'renderizar_matriz_cronogramas'):
+        if hasattr(self.tab_planificacion, 'renderizar_matriz_cronogramas'):
             self.tab_planificacion.renderizar_matriz_cronogramas(hitos, catalogos)
 
-        # Sincronizar submódulo de impactos de tiempo externalizado
-        if hasattr(self, 'tab_tiempo') and hasattr(self.tab_tiempo, 'renderizar_impactos_tiempo'):
+        if hasattr(self.tab_tiempo, 'renderizar_impactos_tiempo'):
             self.tab_tiempo.renderizar_impactos_tiempo(hitos, catalogos)
 
-        # Sincronizar submódulo financiero
-        if hasattr(self, 'tab_finanzas'):
-            if hasattr(self.tab_finanzas, 'renderizar_flujo_caja'):
-                self.tab_finanzas.renderizar_flujo_caja(hitos)
-            elif hasattr(self.tab_finanzas, 'actualizar_datos'):
-                self.tab_finanzas.actualizar_datos(hitos)
+        if hasattr(self.tab_finanzas, 'renderizar_flujo_caja'):
+            self.tab_finanzas.renderizar_flujo_caja(hitos)
+        elif hasattr(self.tab_finanzas, 'actualizar_datos'):
+            self.tab_finanzas.actualizar_datos(hitos)
 
-        # Sincronizar submódulo de calendario
-        if hasattr(self, 'tab_calendario') and hasattr(self.tab_calendario, 'renderizar_calendario_semanal'):
+        if hasattr(self.tab_calendario, 'renderizar_calendario_semanal'):
             self.tab_calendario.renderizar_calendario_semanal()
 
-        # Sincronizar submódulo de Informes y Documentación (.md)
-        if hasattr(self, 'tab_informes'):
+        if hasattr(self.tab_informes, 'actualizar_combos_catalogos'):
             self.tab_informes.actualizar_combos_catalogos()
             self.tab_informes.renderizar_pizarra_informes()
 
         if hasattr(self, 'table_cat_proyectos') and hasattr(self, 'table_cat_cronos'):
             self.renderizar_catalogos_maestros(catalogos)
 
-    def ejecutar_filtrado_global(self):
-        """Ajustado para responder a los nuevos índices tras la reordenación."""
-        texto = self.search_input.text().lower().strip()
+    def ejecutar_filtrado_global(self, texto_busqueda=""):
+        """Filtra reactivamente la información según la pestaña activa del sub-módulo."""
+        texto = texto_busqueda.lower().strip()
+        if not texto:
+            return
+            
         idx_pestana = self.tabs.currentIndex()
-        
-        if idx_pestana == 1 and hasattr(self, 'tab_planificacion'):
+        if idx_pestana == 1:
             tabla = self.tab_planificacion.table_cronogramas
             for r in range(tabla.rowCount()):
                 coincide = False
@@ -529,7 +509,7 @@ class SIPAecoWindow(QWidget):
                         break
                 tabla.setRowHidden(r, not coincide)
                 
-        elif idx_pestana == 2 and hasattr(self, 'tab_tiempo'):
+        elif idx_pestana == 2:
             tabla = self.tab_tiempo.table_impactos_tiempo
             for r in range(tabla.rowCount()):
                 coincide = False
@@ -546,9 +526,31 @@ class SIPAecoWindow(QWidget):
         header = tabla.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setStretchLastSection(True)
+        tabla.setStyleSheet("background-color: #1A1A1A; color: #FFF; gridline-color: #2D2D2D;")
 
+
+# =====================================================================
+# 🔬 MODO DE PRUEBA EN FRÍO / EJECUCIÓN INDEPENDIENTE
+# =====================================================================
 if __name__ == "__main__":
+    # Al arrancar en solitario, añadimos su propia carpeta al path para las vistas locales
+    import os
+    import sys
+    ruta_local = os.path.dirname(os.path.abspath(__file__))
+    if ruta_local not in sys.path:
+        sys.path.insert(0, ruta_local)
+        
+    from PySide6.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    window = SIPAecoWindow()
-    window.show()
+    
+    ventana_test = QWidget()
+    ventana_test.setWindowTitle("SIPAeco Consola Completa - Sandbox Mode")
+    ventana_test.resize(1280, 800)
+    ventana_test.setStyleSheet("background-color: #121212; color: #E0E0E0;")
+    
+    layout_test = QVBoxLayout(ventana_test)
+    dashboard_eco = SIPAecoMainDashboard()
+    layout_test.addWidget(dashboard_eco)
+    
+    ventana_test.show()
     sys.exit(app.exec())
