@@ -6,7 +6,7 @@ Ubicación: SIPA/external/SIPAeco/views/finanzas_view.py
 Autor: Daniel Miñana Montero & Gemini
 Descripción: Módulo de interfaz para finanzas con entrada de datos blindada,
              replicando exactamente el motor de lectura y eventos de tiempo_view.py.
-             🔌 TRUNKING: Alimentación PoE adaptada al Switch de infraestructura.
+             🔌 TRUNKING: Alimentación PoE heredada por el Switch de infraestructura.
 """
 
 import os
@@ -116,22 +116,25 @@ class FinanzasTab(QWidget):
         ly_prev.addWidget(QLabel("💰 Rendimiento Previsto Neto (6M)"))
         self.lbl_kpi_previsto = QLabel("0.00 €")
         self.lbl_kpi_previsto.setStyleSheet("font-size: 16px; font-weight: bold;")
-        panel_kpi.addWidget(self.card_previsto, stretch=1)
+        ly_prev.addWidget(self.lbl_kpi_previsto)
         
         self.card_real = QFrame()
         ly_real = QVBoxLayout(self.card_real)
         ly_real.addWidget(QLabel("🚀 Caja Real Ejecutada Neta (6M)"))
         self.lbl_kpi_real = QLabel("0.00 €")
         self.lbl_kpi_real.setStyleSheet("font-size: 16px; font-weight: bold;")
-        panel_kpi.addWidget(self.card_real, stretch=1)
+        ly_real.addWidget(self.lbl_kpi_real)
         
         self.card_desviacion = QFrame()
         ly_desv = QVBoxLayout(self.card_desviacion)
         ly_desv.addWidget(QLabel("<b>📊 Desviación Total Absoluta</b>"))
         self.lbl_kpi_desviacion = QLabel("0.00 €")
         self.lbl_kpi_desviacion.setStyleSheet("font-size: 18px; font-weight: bold;")
-        panel_kpi.addWidget(self.card_desviacion, stretch=1)
+        ly_desv.addWidget(self.lbl_kpi_desviacion)
         
+        panel_kpi.addWidget(self.card_previsto, stretch=1)
+        panel_kpi.addWidget(self.card_real, stretch=1)
+        panel_kpi.addWidget(self.card_desviacion, stretch=1)
         layout_principal.addLayout(panel_kpi)
         
         # =====================================================================
@@ -196,7 +199,7 @@ class FinanzasTab(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         layout_principal.addWidget(self.table_finanzas)
 
-    def refresh_data(self, hitos_dict, catalogos=None):
+    def refresh_data(self, hitos_dict, catalogos):
         """Llamado por el Core. Inyecta datos en frío de manera idéntica a tiempo_view.py"""
         self.hitos_cache = hitos_dict if hitos_dict else {}
         
@@ -230,27 +233,20 @@ class FinanzasTab(QWidget):
         
         self.registros_filtrados_cache = []
         
-        # 1. Previsiones de Hitos Automáticos (CORREGIDO: Ya no se salta hitos sin nodo 'finanzas')
+        # 1. Previsiones de Hitos Automáticos
         for hito_id, info in self.hitos_cache.items():
-            if not isinstance(info, dict): continue
-            
-            fin_node = info.get("finanzas", {})
-            if not isinstance(fin_node, dict): fin_node = {}
+            fin_node = info.get("finanzas", {}) if isinstance(info, dict) else {}
+            if not fin_node: continue
             
             p_in = float(fin_node.get("ingresos_previstos", 0.0))
-            
-            # Intentamos extraer del nodo finanzas, si da 0 buscamos 'presupuesto_asignado' o 'presupuesto' en la raíz
-            p_out = float(fin_node.get("gastos_previstos", 0.0))
-            if p_out == 0.0:
-                p_out = float(info.get("presupuesto_asignado", info.get("presupuesto", 0.0)))
-            
+            p_out = float(fin_node.get("gastos_previstos", info.get("presupuesto_asignado", 0.0)))
             tot_prev_in += p_in
             tot_prev_out += p_out
             
             if p_in > 0 or p_out > 0:
                 self.registros_filtrados_cache.append({
                     "hash_id": f"PREV-AUTO-{hito_id}",
-                    "fecha": info.get("fecha_inicio", info.get("fecha", hoy.strftime("%Y-%m-%d"))),
+                    "fecha": info.get("fecha_inicio", hoy.strftime("%Y-%m-%d")),
                     "concepto": f"🔄 Previsión automática: {info.get('nombre_accion', 'Gasto Hito')}",
                     "importe": p_in if p_in > 0 else -p_out,
                     "cuenta": "SISTEMA",
@@ -287,7 +283,6 @@ class FinanzasTab(QWidget):
         for tx in historico_bancario:
             fecha_str = tx.get("fecha", "").strip()
             importe = float(tx.get("importe", 0.0))
-            id_hito_vinculado = tx.get("id_hito", "")
             
             try:
                 fecha_tx = datetime.strptime(fecha_str[:10], "%d/%m/%Y")
@@ -301,8 +296,7 @@ class FinanzasTab(QWidget):
                 if importe > 0: tot_real_in += importe
                 else: tot_real_out += abs(importe)
                 
-            # Mostramos si entra en los 60 días O si está asociado a un hito activo para evitar pérdidas visuales
-            if fecha_tx >= limite_60_dias or (id_hito_vinculado and id_hito_vinculado in self.hitos_cache):
+            if fecha_tx >= limite_60_dias:
                 tx_copia = tx.copy()
                 tx_copia["_fecha_dt"] = fecha_tx
                 self.registros_filtrados_cache.append(tx_copia)
@@ -378,28 +372,28 @@ class FinanzasTab(QWidget):
             
             v_p_in = QTableWidgetItem(f"{p_in:.2f} €" if p_in > 0 else "-")
             v_p_in.setFlags(v_p_in.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            v_p_in.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            v_p_in.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 3, v_p_in)
             
             v_p_out = QTableWidgetItem(f"{p_out:.2f} €" if p_out > 0 else "-")
             v_p_out.setFlags(v_p_out.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            v_p_out.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            v_p_out.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 4, v_p_out)
             
             v_r_in = QTableWidgetItem(f"{r_in:.2f} €" if r_in > 0 else "-")
             v_r_in.setFlags(v_r_in.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            v_r_in.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            v_r_in.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 5, v_r_in)
             
             v_r_out = QTableWidgetItem(f"{r_out:.2f} €" if r_out > 0 else "-")
             v_r_out.setFlags(v_r_out.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            v_r_out.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            v_r_out.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             self.table_finanzas.setItem(local_row_idx, 6, v_r_out)
             
             neto_linea = (r_in - r_out) - (p_in - p_out) if cuenta_tx != "SISTEMA" else 0.0
             item_desv = QTableWidgetItem(f"{neto_linea:+.2f} €" if cuenta_tx != "SISTEMA" else "-")
             item_desv.setFlags(item_desv.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            item_desv.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            item_desv.setTextAlignment(Qt.AlignRight | Qt.AlignVertical)
             if cuenta_tx != "SISTEMA":
                 item_desv.setForeground(QColor("#1a7f37") if neto_linea >= 0 else QColor("#ef4444"))
             self.table_finanzas.setItem(local_row_idx, 7, item_desv)
@@ -407,7 +401,7 @@ class FinanzasTab(QWidget):
             txt_fdu = f"📎 ({len(adjuntos)})" if adjuntos else "➕ Adjuntar"
             item_fdu = QTableWidgetItem(txt_fdu)
             item_fdu.setFlags(item_fdu.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            item_fdu.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+            item_fdu.setTextAlignment(Qt.AlignCenter | Qt.AlignVertical)
             if adjuntos:
                 item_fdu.setForeground(QColor("#0969da"))
             self.table_finanzas.setItem(local_row_idx, 8, item_fdu)
@@ -668,17 +662,3 @@ class FinanzasTab(QWidget):
         
         if dialogo.exec() == QDialog.Accepted and self.parent_window:
             self.parent_window.actualizar_todo()
-
-    # =====================================================================
-    # 🔌 TRUNKING: PUERTOS DE ENTRADA EXIGIDOS POR SIPAECO.PY (LÍNEAS 279-282)
-    # =====================================================================
-    def renderizar_flujo_caja(self, hitos):
-        """
-        Puerto principal interceptado por sipaeco.py. 
-        Asegura el desvío directo del flujo caliente hacia tu motor nativo.
-        """
-        self.refresh_data(hitos)
-
-    def actualizar_datos(self, hitos):
-        """Puerto secundario de respaldo exigido por la infraestructura."""
-        self.refresh_data(hitos)
